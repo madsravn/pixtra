@@ -1,4 +1,5 @@
 use crate::pixels::{ColorTrait, Colors, Pixel};
+use crate::utility::clamp;
 use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::path::Path;
 
@@ -121,6 +122,10 @@ impl Canvas {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
     }
 
+    pub fn to_grey() -> Canvas {
+        // Creates new - function pointer to grey
+    }
+
     // TODO: What is the opionated solution to this that fits into tiles? 
     // If a user calls this to get something that exceeds width and height?
     /*pub fn get_subimage(&self, x: u32, y: u32, w: u32, h: u32) -> Canvas {
@@ -129,13 +134,4 @@ impl Canvas {
     }*/
 }
 
-    // TODO: Make a utility class
-    fn clamp<T: Ord>(min: T, max: T, val: T) -> T {
-        if val > max {
-            return max;
-        }
-        if val < min {
-            return min;
-        }
-        val
-    }
+

@@ -1,5 +1,6 @@
 pub mod canvas;
 pub mod pixels;
+pub mod utility;
 #[cfg(test)]
 mod tests {
     #[test]

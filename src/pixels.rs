@@ -58,6 +58,7 @@ impl Eq for Pixel {}
 
 impl Pixel {
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
+        // TODO: Clamp - u8 max
         Pixel {
             r: (self.r as f32 * x) as u8,
             g: (self.g as f32 * y) as u8,
