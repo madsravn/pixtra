@@ -13,8 +13,6 @@
 use crate::pixels::Pixel;
 use crate::canvas::Canvas;
 use std::cmp;
-use image::io::Reader;
-use std::path::Path;
 
 // TO AND FROM GREY
 
@@ -90,6 +88,47 @@ pub fn error(c1: &Canvas, c2: &Canvas) -> u64 {
 
     5
 }
+
+
+    // TODO: Should these exist here or only in the Canvas as private members? 
+    pub fn apply_alpha_color(color_one: f32, alpha_one: f32, color_two: f32, alpha_two: f32) -> f32 {
+        (1.0 - alpha_one) * alpha_two * color_two + alpha_one * color_one
+    }
+
+    pub fn overlap_colors(current_pixel: &Pixel, new_pixel: &Pixel) -> Pixel {
+        let pixel_one_normalized = new_pixel.normalize();
+        let pixel_two_normalized = current_pixel.normalize();
+        let new_a =
+            (1.0 - pixel_one_normalized.3) * pixel_two_normalized.3 + pixel_one_normalized.3;
+        let new_r = apply_alpha_color(
+            pixel_one_normalized.0,
+            pixel_one_normalized.3,
+            pixel_two_normalized.0,
+            pixel_two_normalized.3,
+        ) * new_a;
+        let new_g = apply_alpha_color(
+            pixel_one_normalized.1,
+            pixel_one_normalized.3,
+            pixel_two_normalized.1,
+            pixel_two_normalized.3,
+        ) * new_a;
+        let new_b = apply_alpha_color(
+            pixel_one_normalized.2,
+            pixel_one_normalized.3,
+            pixel_two_normalized.2,
+            pixel_two_normalized.3,
+        ) * new_a;
+
+        let new_color = Pixel {
+            a: (new_a * 255.0) as u8,
+            r: (new_r * 255.0) as u8,
+            b: (new_g * 255.0) as u8,
+            g: (new_b * 255.0) as u8,
+        };
+
+        new_color
+    }
+
 
 
 

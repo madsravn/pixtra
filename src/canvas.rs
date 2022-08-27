@@ -1,7 +1,8 @@
 use crate::pixels::{ColorTrait, Colors, Pixel};
-use crate::utility::clamp;
+use crate::utility::{clamp, to_grey_lumiosity, overlap_colors};
 use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::path::Path;
+use std::cmp::max;
 
 
 //TODO: Should I use u32 or usize? Rely on image crate? 
@@ -22,6 +23,7 @@ pub enum ImageError {
     Unsupported(String),
     IoError(String),
 }
+
 fn map_error(error: &image::ImageError) -> ImageError {
     match error {
         image::ImageError::Decoding(e) => {
@@ -47,11 +49,13 @@ fn map_error(error: &image::ImageError) -> ImageError {
 
 impl Canvas {
     pub fn new(w: u32, h: u32) -> Canvas {
+        let w = max(w, 1);
+        let h = max(h, 1);
         let ps = vec![Colors::WHITE; (w * h) as usize];
         Canvas {
             pixels: ps,
             height: h,
-            width: w,
+            width: w
         }
     }
 
@@ -122,8 +126,29 @@ impl Canvas {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
     }
 
-    pub fn to_grey() -> Canvas {
-        // Creates new - function pointer to grey
+    pub fn to_grey(&self) -> Canvas {
+        let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
+        Canvas { pixels, height: self.height, width: self.width }
+    }
+
+    //TODO: Could I return a a new image and let the old one die at the same cost?
+    // Takes self, return self. Use `mut self` instead of `&mut self`
+
+    pub fn draw_square_mut(&mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) {
+        // TODO: Clamp on (x + w) and (y + h)
+        for i in x..(x + w) {
+            for j in y..(y + h) {
+                let current_color = &self.get_pixel(i, j);
+                // TODO: If we are just drawing on white it really doesn't matter. Maybe we should
+                // remove this check
+                if current_color.distance(&Colors::WHITE) > 3.0 {
+                    let new_color = overlap_colors(&current_color, &color);
+                    self.set_pixel(i, j, &new_color);
+                } else {
+                    self.set_pixel(i, j, &color);
+                }
+            }
+        }
     }
 
     // TODO: What is the opionated solution to this that fits into tiles? 

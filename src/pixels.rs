@@ -75,4 +75,13 @@ impl Pixel {
         let dist_a = (self.a as i32 - other.a as i32).pow(2) as f32;
         (dist_r + dist_g + dist_b + dist_a).sqrt()
     }
+
+    pub fn normalize(&self) -> (f32, f32, f32, f32) {
+        (
+            self.r as f32 / 255.0,
+            self.g as f32 / 255.0,
+            self.b as f32 / 255.0,
+            self.a as f32 / 255.0,
+        )
+    }
 }
