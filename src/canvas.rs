@@ -92,7 +92,8 @@ impl Canvas {
         match img {
             Ok(image) => {
                 let (width, height) = image.dimensions();
-                let mut vec = Vec::with_capacity((width * height) as usize);
+                //let mut vec = Vec::with_capacity((width * height) as usize);
+                let mut vec = vec![Colors::WHITE; (width * height) as usize];
                 for (x, y, pixel) in image.pixels() {
                     vec[(width * y + x) as usize] = Pixel {
                         r: pixel[0],
