@@ -92,7 +92,6 @@ impl Canvas {
         match img {
             Ok(image) => {
                 let (width, height) = image.dimensions();
-                //let mut vec = Vec::with_capacity((width * height) as usize);
                 let mut vec = vec![Colors::WHITE; (width * height) as usize];
                 for (x, y, pixel) in image.pixels() {
                     vec[(width * y + x) as usize] = Pixel {
@@ -115,8 +114,8 @@ impl Canvas {
     }
 
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
-        let w = min(width, width - x);
-        let h = min(height, height - y);
+        let w = min(width, self.width - x);
+        let h = min(height, self.height - y);
 
         let mut c = Canvas::new(width, height);
         for i in 0..w {
@@ -128,11 +127,11 @@ impl Canvas {
     }
 
     pub fn set_subimage_mut(&mut self, x: u32, y: u32, c: &Canvas) {
-        let w = min(c.width, self.width);
-        let h = min(c.height, self.height);
+        let w = min(c.width, self.width - x);
+        let h = min(c.height, self.height - y);
         for i in 0..w {
             for j in 0..h {
-                self.set_pixel(i, j, &c.get_pixel(x + i, y + j));
+                self.set_pixel(x + i, y + j, &c.get_pixel(i, j));
             }
         }
     }
