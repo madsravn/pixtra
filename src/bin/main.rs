@@ -1,6 +1,6 @@
+use image::io::Reader;
 use pixtra::canvas::Canvas;
 use std::path::Path;
-use image::io::Reader;
 
 // TODO: Turn images grey
 // Subtract images
@@ -20,9 +20,14 @@ fn main() {
 
 // TODO: Look at this for inspiration: https://imagemagick.org/script/identify.php
 fn identify(p: &Path) -> String {
-//TODO: Fix unwrap!
+    //TODO: Fix unwrap!
     let reader = Reader::open(p).unwrap().with_guessed_format().unwrap();
-    reader.format().unwrap().extensions_str().get(0).unwrap().to_owned().to_string()
+    reader
+        .format()
+        .unwrap()
+        .extensions_str()
+        .get(0)
+        .unwrap()
+        .to_owned()
+        .to_string()
 }
-
-

@@ -1,11 +1,10 @@
 use crate::pixels::{ColorTrait, Colors, Pixel};
-use crate::utility::{clamp, to_grey_lumiosity, overlap_colors};
+use crate::utility::{clamp, overlap_colors, to_grey_lumiosity};
 use image::{GenericImageView, ImageFormat, RgbaImage};
+use std::cmp::{max, min};
 use std::path::Path;
-use std::cmp::max;
 
-
-//TODO: Should I use u32 or usize? Rely on image crate? 
+//TODO: Should I use u32 or usize? Rely on image crate?
 
 #[derive(Clone, Debug)]
 pub struct Canvas {
@@ -55,7 +54,7 @@ impl Canvas {
         Canvas {
             pixels: ps,
             height: h,
-            width: w
+            width: w,
         }
     }
 
@@ -114,6 +113,29 @@ impl Canvas {
         }
     }
 
+    pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
+        let w = min(width, width - x);
+        let h = min(height, height - y);
+
+        let mut c = Canvas::new(width, height);
+        for i in 0..w {
+            for j in 0..h {
+                c.set_pixel(i, j, &self.get_pixel(x + i, y + j));
+            }
+        }
+        c
+    }
+
+    pub fn set_subimage_mut(&mut self, x: u32, y: u32, c: &Canvas) {
+        let w = min(c.width, self.width);
+        let h = min(c.height, self.height);
+        for i in 0..w {
+            for j in 0..h {
+                self.set_pixel(i, j, &c.get_pixel(x + i, y + j));
+            }
+        }
+    }
+
     // TODO: Figure out a better construct than (x: usize, y: usize). Same for boxes
     pub fn get_pixel(&self, x: u32, y: u32) -> Pixel {
         let x = clamp(0, self.width - 1, x);
@@ -128,7 +150,11 @@ impl Canvas {
 
     pub fn to_grey(&self) -> Canvas {
         let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
-        Canvas { pixels, height: self.height, width: self.width }
+        Canvas {
+            pixels,
+            height: self.height,
+            width: self.width,
+        }
     }
 
     //TODO: Could I return a a new image and let the old one die at the same cost?
@@ -151,12 +177,10 @@ impl Canvas {
         }
     }
 
-    // TODO: What is the opionated solution to this that fits into tiles? 
+    // TODO: What is the opionated solution to this that fits into tiles?
     // If a user calls this to get something that exceeds width and height?
     /*pub fn get_subimage(&self, x: u32, y: u32, w: u32, h: u32) -> Canvas {
 
 
     }*/
 }
-
-
