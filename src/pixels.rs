@@ -1,3 +1,5 @@
+use crate::utility::clamp;
+
 pub trait ColorTrait {
     const WHITE: Pixel;
     const BLACK: Pixel;
@@ -58,22 +60,29 @@ impl Eq for Pixel {}
 
 impl Pixel {
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
-        // TODO: Clamp - u8 max
         Pixel {
-            r: (self.r as f32 * x) as u8,
-            g: (self.g as f32 * y) as u8,
-            b: (self.b as f32 * z) as u8,
+            r: clamp(0f32, u8::max_value() as f32, self.r as f32 * x) as u8,
+            g: clamp(0f32, u8::max_value() as f32, self.g as f32 * y) as u8,
+            b: clamp(0f32, u8::max_value() as f32, self.b as f32 * z) as u8,
             a: self.a,
         }
     }
 
-    // TODO: Fix this horrible mess
     pub fn distance(&self, other: &Pixel) -> f32 {
         let dist_r = (self.r as i32 - other.r as i32).pow(2) as f32;
         let dist_g = (self.g as i32 - other.g as i32).pow(2) as f32;
         let dist_b = (self.b as i32 - other.b as i32).pow(2) as f32;
         let dist_a = (self.a as i32 - other.a as i32).pow(2) as f32;
         (dist_r + dist_g + dist_b + dist_a).sqrt()
+    }
+
+    pub fn diff(&self, other: &Pixel) -> Pixel {
+        Pixel { 
+            r: (self.r as i16 - other.r as i16).abs() as u8, 
+            g: (self.g as i16 - other.g as i16).abs() as u8, 
+            b: (self.b as i16 - other.b as i16).abs() as u8, 
+            a: (self.a as i16 - other.a as i16).abs() as u8, 
+        }
     }
 
     pub fn normalize(&self) -> (f32, f32, f32, f32) {

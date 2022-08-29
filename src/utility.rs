@@ -65,7 +65,7 @@ where
 }
 
 // TODO: Make a utility class
-pub fn clamp<T: Ord>(min: T, max: T, val: T) -> T {
+pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
     if val > max {
         return max;
     }
@@ -86,17 +86,29 @@ pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
     )
 }
 
-pub fn error(c1: &Canvas, c2: &Canvas) -> u64 {
+pub fn diff(c1: &Canvas, c2: &Canvas) -> Canvas {
+
+    let c = Canvas::new(1,1);
+    c
+}
+
+// https://stackoverflow.com/questions/20271479/what-does-it-mean-to-get-the-mse-mean-error-squared-for-2-images
+pub fn error(c1: &Canvas, c2: &Canvas) -> u128 {
     let width = c1.width.min(c2.width);
     let height = c1.height.min(c2.height);
+    let (mut r, mut g, mut b, mut a) = (0u128, 0u128, 0u128, 0u128);
     for x in 0..width {
         for y in 0..height {
             let p1 = c1.get_pixel(x, y);
             let p2 = c2.get_pixel(x, y);
+            let diff = p1.diff(&p2);
+            r += diff.r.pow(2) as u128;
+            g += diff.g.pow(2) as u128;
+            b += diff.b.pow(2) as u128;
+            a += diff.a.pow(2) as u128;
         }
     }
-
-    5
+    (r + g + b + a) / ((4 * width * height) as u128)
 }
 
 // TODO: Should these exist here or only in the Canvas as private members?
