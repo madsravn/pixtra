@@ -6,12 +6,19 @@ authors = ["Mads Ravn <madsravn@gmail.com>"]
 license = "GPL-3.0"
 keywords = ["pixels", "image", "graphics", "tool"]
 categories = ["multimedia::images", "multimedia::encoding"]
-include = ["src/", "GPLv3-license"]
 repository = "https://github.com/madsravn/pixtra"
 description = "Pixtra aims to be a very simple and easy-to-use image manipulation tool by being opionated and contain a lot of examples"
+include = [
+  "src/**/*",
+  "Cargo.toml",
+  "GPLv3-license",
+  "README.md",
+  "examples/**/*"
+]
 
+[features]
+pixtra = []
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
 [lib]
@@ -19,8 +26,13 @@ name = "pixtra"
 path = "src/lib.rs"
 
 [[bin]]
-name = "pixtrab"
+name = "pixtra"
 path = "src/bin/main.rs" 
 
 [dependencies]
 image = "0.24.3"
+
+
+[[example]]
+name = "create-image"
+# required-features = ["pixtra"]

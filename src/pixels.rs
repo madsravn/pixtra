@@ -1,4 +1,5 @@
 use crate::utility::clamp;
+use std::fmt;
 
 pub trait ColorTrait {
     const WHITE: Pixel;
@@ -43,6 +44,7 @@ impl ColorTrait for Colors {
     };
 }
 
+//TODO: Should this have a ::new? Can we hide the struct for construction but allow reading? 
 #[derive(Hash, Clone, Debug)]
 pub struct Pixel {
     pub r: u8,
@@ -57,6 +59,12 @@ impl PartialEq for Pixel {
     }
 }
 impl Eq for Pixel {}
+
+impl fmt::Display for Pixel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {}, {}, {})", self.r, self.g, self.b, self.a)
+    }
+}
 
 impl Pixel {
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
@@ -92,5 +100,32 @@ impl Pixel {
             self.b as f32 / 255.0,
             self.a as f32 / 255.0,
         )
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn pixel_it_works() {
+        let pixel = Pixel {r: 255, g: 255, b: 255, a: 0};
+        assert_eq!(pixel.a, 0);
+        assert_eq!(pixel.r, 255);
+        assert_eq!(pixel.g, 255);
+        assert_eq!(pixel.b, 255);
+    }
+
+    #[test]
+    fn pixel_equality_works() {
+        let pixel_one = Pixel {r: 155, g: 172, b: 3, a: 255};
+        let pixel_two = Pixel {r: 155, g: 172, b: 3, a: 255};
+        assert_eq!(pixel_one.r, pixel_two.r);
+        assert_eq!(pixel_one.g, pixel_two.g);
+        assert_eq!(pixel_one.b, pixel_two.b);
+        assert_eq!(pixel_one.a, pixel_two.a);
+        assert_eq!(pixel_one, pixel_two);
+
+        // TODO: Test for each component
     }
 }

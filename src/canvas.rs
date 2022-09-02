@@ -113,6 +113,8 @@ impl Canvas {
         }
     }
 
+    // TODO: This is wrong in a few ways
+    // ::new(width, height) needs to be adjusted
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
         let w = min(width, self.width - x);
         let h = min(height, self.height - y);
@@ -120,20 +122,32 @@ impl Canvas {
         let mut c = Canvas::new(width, height);
         for i in 0..w {
             for j in 0..h {
-                c.set_pixel(i, j, &self.get_pixel(x + i, y + j));
+                c.set_pixel_mut(i, j, &self.get_pixel(x + i, y + j));
             }
         }
         c
     }
 
+    //TODO: Fix self.width - x issue
     pub fn set_subimage_mut(&mut self, x: u32, y: u32, c: &Canvas) {
         let w = min(c.width, self.width - x);
         let h = min(c.height, self.height - y);
         for i in 0..w {
             for j in 0..h {
-                self.set_pixel(x + i, y + j, &c.get_pixel(i, j));
+                self.set_pixel_mut(x + i, y + j, &c.get_pixel(i, j));
             }
         }
+    }
+
+    pub fn set_subimage(mut self, x: u32, y: u32, c: &Canvas) -> Canvas {
+        let w = min(c.width, self.width - x);
+        let h = min(c.height, self.height - y);
+        for i in 0..w {
+            for j in 0..h {
+                self.set_pixel_mut(x + i, y + j, &c.get_pixel(i, j));
+            }
+        }
+        self
     }
 
     // TODO: Figure out a better construct than (x: usize, y: usize). Same for boxes
@@ -144,9 +158,16 @@ impl Canvas {
         pixel
     }
 
-    pub fn set_pixel(&mut self, x: u32, y: u32, pixel: &Pixel) {
+    pub fn set_pixel(mut self, x: u32, y: u32, pixel: &Pixel) -> Canvas {
+        self.pixels[(self.width * y + x) as usize] = pixel.clone();
+        self
+    }
+
+    pub fn set_pixel_mut(&mut self, x: u32, y: u32, pixel: &Pixel) {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
     }
+
+
 
     pub fn to_grey(&self) -> Canvas {
         let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
@@ -157,21 +178,27 @@ impl Canvas {
         }
     }
 
+    pub fn to_grey_mut(&mut self) {
+        let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
+        self.pixels = pixels;
+    }
+
     //TODO: Could I return a a new image and let the old one die at the same cost?
     // Takes self, return self. Use `mut self` instead of `&mut self`
 
     pub fn draw_square_mut(&mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) {
-        // TODO: Clamp on (x + w) and (y + h)
-        for i in x..(x + w) {
-            for j in y..(y + h) {
-                let current_color = &self.get_pixel(i, j);
-                // TODO: If we are just drawing on white it really doesn't matter. Maybe we should
-                // remove this check
-                if current_color.distance(&Colors::WHITE) > 3.0 {
-                    let new_color = overlap_colors(&current_color, &color);
-                    self.set_pixel(i, j, &new_color);
-                } else {
-                    self.set_pixel(i, j, &color);
+        if x < self.width && y < self.height {
+            for i in x..min(x + w, self.width) {
+                for j in y..min(y + h, self.height) {
+                    let current_color = &self.get_pixel(i, j);
+                    // TODO: If we are just drawing on white it really doesn't matter. Maybe we should
+                    // remove this check
+                    if current_color.distance(&Colors::WHITE) > 3.0 {
+                        let new_color = overlap_colors(&current_color, &color);
+                        self.set_pixel_mut(i, j, &new_color);
+                    } else {
+                        self.set_pixel_mut(i, j, &color);
+                    }
                 }
             }
         }
