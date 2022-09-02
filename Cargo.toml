@@ -35,4 +35,5 @@ image = "0.24.3"
 
 [[example]]
 name = "create-image"
+test = true
 # required-features = ["pixtra"]
