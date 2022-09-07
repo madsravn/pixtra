@@ -87,9 +87,27 @@ pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
 }
 
 pub fn diff(c1: &Canvas, c2: &Canvas) -> Canvas {
-
-    let c = Canvas::new(1,1);
+    let c = Canvas::new(1, 1);
     c
+}
+
+pub fn diff_debug(c1: &Canvas, c2: &Canvas) -> Canvas {
+    let res = if c1.width == c2.width && c1.height == c2.height {
+        let pixels = c1
+            .pixels
+            .iter()
+            .zip(c2.pixels.iter())
+            .map(|(p1, p2)| p1.diff(p2))
+            .collect();
+        Canvas {
+            width: c1.width,
+            height: c1.height,
+            pixels,
+        }
+    } else {
+        c1.clone()
+    };
+    res
 }
 
 // https://stackoverflow.com/questions/20271479/what-does-it-mean-to-get-the-mse-mean-error-squared-for-2-images

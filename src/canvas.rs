@@ -2,6 +2,7 @@ use crate::pixels::{ColorTrait, Colors, Pixel};
 use crate::utility::{clamp, overlap_colors, to_grey_lumiosity};
 use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::cmp::{max, min};
+use std::fmt;
 use std::path::Path;
 
 //TODO: Should I use u32 or usize? Rely on image crate?
@@ -23,6 +24,28 @@ pub enum ImageError {
     IoError(String),
 }
 
+impl PartialEq for Canvas {
+    fn eq(&self, other: &Self) -> bool {
+        if self.width == other.width && self.height == other.height {
+            let result = self
+                .pixels
+                .iter()
+                .zip(other.pixels.iter())
+                .fold(true, |acc, (left, right)| acc && left == right);
+            return result;
+        }
+        false
+    }
+}
+impl Eq for Canvas {}
+
+impl fmt::Display for Canvas {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "()")
+    }
+}
+
+// TODO: IoError should be descriptive of which file you are trying to open.
 fn map_error(error: &image::ImageError) -> ImageError {
     match error {
         image::ImageError::Decoding(e) => {
@@ -113,13 +136,12 @@ impl Canvas {
         }
     }
 
-    // TODO: This is wrong in a few ways
-    // ::new(width, height) needs to be adjusted
+    // TODO: Pretty names with shadowing
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
         let w = min(width, self.width - x);
         let h = min(height, self.height - y);
 
-        let mut c = Canvas::new(width, height);
+        let mut c = Canvas::new(w, h);
         for i in 0..w {
             for j in 0..h {
                 c.set_pixel_mut(i, j, &self.get_pixel(x + i, y + j));
@@ -128,7 +150,7 @@ impl Canvas {
         c
     }
 
-    //TODO: Fix self.width - x issue
+    // TODO: Pretty names with shadowing
     pub fn set_subimage_mut(&mut self, x: u32, y: u32, c: &Canvas) {
         let w = min(c.width, self.width - x);
         let h = min(c.height, self.height - y);
@@ -167,8 +189,6 @@ impl Canvas {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
     }
 
-
-
     pub fn to_grey(&self) -> Canvas {
         let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
         Canvas {
@@ -183,25 +203,40 @@ impl Canvas {
         self.pixels = pixels;
     }
 
-    //TODO: Could I return a a new image and let the old one die at the same cost?
-    // Takes self, return self. Use `mut self` instead of `&mut self`
-
     pub fn draw_square_mut(&mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) {
         if x < self.width && y < self.height {
             for i in x..min(x + w, self.width) {
                 for j in y..min(y + h, self.height) {
                     let current_color = &self.get_pixel(i, j);
-                    // TODO: If we are just drawing on white it really doesn't matter. Maybe we should
-                    // remove this check
-                    if current_color.distance(&Colors::WHITE) > 3.0 {
-                        let new_color = overlap_colors(&current_color, &color);
-                        self.set_pixel_mut(i, j, &new_color);
-                    } else {
-                        self.set_pixel_mut(i, j, &color);
-                    }
+                    let new_color = overlap_colors(&current_color, &color);
+                    self.set_pixel_mut(i, j, &new_color);
                 }
             }
         }
+    }
+
+    pub fn draw_square(mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) -> Canvas {
+        if x < self.width && y < self.height {
+            for i in x..min(x + w, self.width) {
+                for j in y..min(y + h, self.height) {
+                    let current_color = &self.get_pixel(i, j);
+                    let new_color = overlap_colors(&current_color, &color);
+                    self.set_pixel_mut(i, j, &new_color);
+                }
+            }
+        }
+        self
+    }
+
+    pub fn filter(&self, filter: fn(&Canvas, u32, u32) -> Pixel) -> Canvas {
+        let mut canvas = Canvas::new(self.width, self.height);
+        for x in 0..self.width {
+            for y in 0..self.height {
+                let pixel = filter(&self, x, y);
+                canvas.set_pixel_mut(x, y, &pixel);
+            }
+        }
+        canvas
     }
 
     // TODO: What is the opionated solution to this that fits into tiles?

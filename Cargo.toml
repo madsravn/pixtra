@@ -36,4 +36,14 @@ image = "0.24.3"
 [[example]]
 name = "create-image"
 test = true
+
+[[example]]
+name = "simple-filters"
+test = true
+
+[[example]]
+name = "advanced-filters"
+test = true
+
+
 # required-features = ["pixtra"]
