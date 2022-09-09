@@ -54,6 +54,38 @@ pub struct Pixel {
     pub a: u8,
 }
 
+pub struct PixelBuilder {
+    r: f32,
+    g: f32,
+    b: f32,
+    a: f32,
+}
+
+impl PixelBuilder {
+
+    pub fn new() -> PixelBuilder {
+
+        PixelBuilder {
+            r: 0f32,
+            g: 0f32,
+            b: 0f32,
+            a: 0f32
+        }
+    }
+
+    pub fn from(red: f32, green: f32, blue: f32, alpha: f32) -> PixelBuilder {
+        PixelBuilder { r: red, g: green, b: blue, a: alpha}
+    }
+
+    pub fn build(&self) -> Pixel {
+        Pixel::from(self.r, self.g, self.b, self.a)
+    }
+
+    pub fn reset(&self) -> PixelBuilder {
+        PixelBuilder::new()
+    }
+}
+
 impl PartialEq for Pixel {
     fn eq(&self, other: &Self) -> bool {
         self.r == other.r && self.g == other.g && self.b == other.b && self.a == other.a
@@ -67,6 +99,33 @@ impl fmt::Display for Pixel {
     }
 }
 
+impl Add for PixelBuilder {
+    type Output = PixelBuilder;
+
+    fn add(self, other: PixelBuilder) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r + other.r,
+            g: self.g + other.g,
+            b: self.b + other.b,
+            a: self.a + other.a,
+        }
+    }
+}
+
+impl Add<Pixel> for PixelBuilder {
+    type Output = PixelBuilder;
+
+    fn add(self, other: Pixel) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r + other.r as f32,
+            g: self.g + other.g as f32,
+            b: self.b + other.b as f32,
+            a: self.a + other.a as f32,
+        }
+    }
+}
+
+
 impl Add for Pixel {
     type Output = Pixel;
 
@@ -75,14 +134,27 @@ impl Add for Pixel {
             r: clamp(0u16, u8::max_value() as u16, self.r as u16 + other.r as u16) as u8,
             g: clamp(0u16, u8::max_value() as u16, self.g as u16 + other.g as u16) as u8,
             b: clamp(0u16, u8::max_value() as u16, self.b as u16 + other.b as u16) as u8,
-            // TODO: Do we want to change alpha?
             a: clamp(0u16, u8::max_value() as u16, self.a as u16 + other.a as u16) as u8,
         }
     }
 }
 
 impl Pixel {
-    //TODO: Add `add` and `subtract`
+
+    pub fn builder() -> PixelBuilder {
+        PixelBuilder::new()
+    }
+
+    pub fn from(red: f32, green: f32, blue: f32, alpha: f32) -> Pixel {
+        Pixel {
+            r: clamp(0f32, u8::max_value() as f32, red as f32) as u8,
+            g: clamp(0f32, u8::max_value() as f32, green as f32) as u8,
+            b: clamp(0f32, u8::max_value() as f32, blue as f32) as u8,
+            a: clamp(0f32, u8::max_value() as f32, alpha as f32) as u8,
+        }
+
+
+    }
 
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
         Pixel {
