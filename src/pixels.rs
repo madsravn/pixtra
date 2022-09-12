@@ -54,6 +54,7 @@ pub struct Pixel {
     pub a: u8,
 }
 
+// TODO: Can we have a generic either f32 or f64? These but none else
 pub struct PixelBuilder {
     r: f32,
     g: f32,
@@ -135,6 +136,19 @@ impl Add for Pixel {
             g: clamp(0u16, u8::max_value() as u16, self.g as u16 + other.g as u16) as u8,
             b: clamp(0u16, u8::max_value() as u16, self.b as u16 + other.b as u16) as u8,
             a: clamp(0u16, u8::max_value() as u16, self.a as u16 + other.a as u16) as u8,
+        }
+    }
+}
+
+impl Add<PixelBuilder> for Pixel {
+    type Output = PixelBuilder;
+
+    fn add(self, other: PixelBuilder) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r as f32 + other.r,
+            g: self.g as f32 + other.g,
+            b: self.b as f32 + other.b,
+            a: self.a as f32 + other.a,
         }
     }
 }
@@ -235,6 +249,15 @@ impl Pixel {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // TODO: This is ugly. Do we need to implement for &Pixel and &PixelBuilder as well? 
+    #[test]
+    fn pixel_builder_simple() {
+        let builder = Pixel::builder();
+        let pixel = Pixel {r: 1, g: 2, b: 3, a: 4};
+        let resulting_pixel = (builder + pixel.clone() + pixel.clone() + pixel.clone()).build();
+        assert_eq!(resulting_pixel, Pixel {r: 3, g: 6, b: 9, a: 12});
+    }
 
     #[test]
     fn pixel_show_display() {
@@ -439,5 +462,5 @@ mod tests {
                 a: 7
             }
         );
-    }
 }
+    }

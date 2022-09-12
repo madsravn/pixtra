@@ -39,6 +39,7 @@ impl PartialEq for Canvas {
 }
 impl Eq for Canvas {}
 
+// TODO!
 impl fmt::Display for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "()")
@@ -135,6 +136,22 @@ impl Canvas {
             }
         }
     }
+
+    pub fn count_pixels(&self, pixel: &Pixel) -> u32 {
+        5
+    }
+
+    pub fn replace_pixel_with(mut self, find_pixel: &Pixel, replace_pixel: &Pixel) -> Canvas {
+
+        self
+    }
+
+    pub fn replace_pixel_with_mut(&mut self, find_pixel: &Pixel, replace_pixel: &Pixel) {
+
+    }
+
+
+
 
     // TODO: Pretty names with shadowing
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
