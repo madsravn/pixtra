@@ -38,6 +38,10 @@ name = "create-image"
 test = true
 
 [[example]]
+name = "count-and-replace"
+test = true
+
+[[example]]
 name = "simple-filters"
 test = true
 

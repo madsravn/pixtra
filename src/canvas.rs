@@ -6,13 +6,33 @@ use std::fmt;
 use std::path::Path;
 
 //TODO: Should I use u32 or usize? Rely on image crate?
+//
+//
+//TODO!!!! Make use of Point and Box for get_pixel and get_subimage
+//TODO!!!! Create documentation so you can utilize it in this project
 
 #[derive(Clone, Debug)]
 pub struct Canvas {
+    // TODO: Should this be private?
     pub pixels: Vec<Pixel>,
     pub height: u32,
     pub width: u32,
 }
+
+#[derive(Clone, Debug)]
+pub struct Point {
+    pub x: u32, 
+    pub y: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct Rect {
+    pub start: Point,
+    pub width: u32,
+    pub height: u32,
+}
+
+
 
 #[derive(Debug)]
 pub enum ImageError {
@@ -137,52 +157,83 @@ impl Canvas {
         }
     }
 
+
     pub fn count_pixels(&self, pixel: &Pixel) -> u32 {
-        5
+        self.find_positions_of_pixels(pixel).len() as u32
     }
 
+    pub fn count_pixels_with_distance(&self, pixel: &Pixel, distance: f32) -> u32 {
+        self.find_positions_of_pixels_with_distance(pixel, distance).len() as u32
+    }
+
+    fn find_positions_of_pixels(&self, pixel: &Pixel) -> Vec<usize> {
+        self.pixels.iter().enumerate().filter(|(_, val)| val == &pixel).map(|(i, _)| i).collect()
+    }
+
+    fn find_positions_of_pixels_with_distance(&self, pixel: &Pixel, distance: f32) -> Vec<usize> {
+        self.pixels.iter().enumerate().filter(|(_, val)| pixel.distance(&val) < distance).map(|(i, _)| i).collect()
+    }
+
+    pub fn replace_pixel_with_distance(mut self, find_pixel: &Pixel, distance: f32, replace_pixel: &Pixel) -> Canvas {
+        let positions = self.find_positions_of_pixels_with_distance(find_pixel, distance);
+        for pos in positions {
+            self.pixels[pos] = replace_pixel.clone();
+        }
+
+        self
+    }
+
+    pub fn replace_pixel_with_distance_mut(&mut self, find_pixel: &Pixel, distance: f32, replace_pixel: &Pixel) {
+        let positions = self.find_positions_of_pixels_with_distance(find_pixel, distance);
+        for pos in positions {
+            self.pixels[pos] = replace_pixel.clone();
+        }
+    }
+    
     pub fn replace_pixel_with(mut self, find_pixel: &Pixel, replace_pixel: &Pixel) -> Canvas {
+        let positions = self.find_positions_of_pixels(find_pixel);
+        for pos in positions {
+            self.pixels[pos] = replace_pixel.clone();
+        }
 
         self
     }
 
     pub fn replace_pixel_with_mut(&mut self, find_pixel: &Pixel, replace_pixel: &Pixel) {
-
+        let positions = self.find_positions_of_pixels(find_pixel);
+        for pos in positions {
+            self.pixels[pos] = replace_pixel.clone();
+        }
     }
 
-
-
-
-    // TODO: Pretty names with shadowing
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
-        let w = min(width, self.width - x);
-        let h = min(height, self.height - y);
+        let width = min(width, self.width - x);
+        let height = min(height, self.height - y);
 
-        let mut c = Canvas::new(w, h);
-        for i in 0..w {
-            for j in 0..h {
+        let mut c = Canvas::new(width, height);
+        for i in 0..width {
+            for j in 0..height {
                 c.set_pixel_mut(i, j, &self.get_pixel(x + i, y + j));
             }
         }
         c
     }
 
-    // TODO: Pretty names with shadowing
     pub fn set_subimage_mut(&mut self, x: u32, y: u32, c: &Canvas) {
-        let w = min(c.width, self.width - x);
-        let h = min(c.height, self.height - y);
-        for i in 0..w {
-            for j in 0..h {
+        let width = min(c.width, self.width - x);
+        let height = min(c.height, self.height - y);
+        for i in 0..width {
+            for j in 0..height {
                 self.set_pixel_mut(x + i, y + j, &c.get_pixel(i, j));
             }
         }
     }
 
     pub fn set_subimage(mut self, x: u32, y: u32, c: &Canvas) -> Canvas {
-        let w = min(c.width, self.width - x);
-        let h = min(c.height, self.height - y);
-        for i in 0..w {
-            for j in 0..h {
+        let width = min(c.width, self.width - x);
+        let height = min(c.height, self.height - y);
+        for i in 0..width {
+            for j in 0..height {
                 self.set_pixel_mut(x + i, y + j, &c.get_pixel(i, j));
             }
         }
