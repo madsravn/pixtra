@@ -19,8 +19,6 @@ include = [
 [features]
 pixtra = []
 
-
-
 [lib]
 name = "pixtra"
 path = "src/lib.rs"
@@ -31,7 +29,6 @@ path = "src/bin/main.rs"
 
 [dependencies]
 image = "0.24.3"
-
 
 [[example]]
 name = "create-image"
@@ -48,6 +45,3 @@ test = true
 [[example]]
 name = "advanced-filters"
 test = true
-
-
-# required-features = ["pixtra"]

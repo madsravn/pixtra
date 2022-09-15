@@ -26,10 +26,15 @@ pub struct Point {
 }
 
 #[derive(Clone, Debug)]
-pub struct Rect {
-    pub start: Point,
+pub struct Size {
     pub width: u32,
     pub height: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct Rect {
+    pub start: Point,
+    pub size: Size,
 }
 
 
@@ -91,14 +96,22 @@ fn map_error(error: &image::ImageError) -> ImageError {
 }
 
 impl Canvas {
-    pub fn new(w: u32, h: u32) -> Canvas {
-        let w = max(w, 1);
-        let h = max(h, 1);
-        let ps = vec![Colors::WHITE; (w * h) as usize];
+    /// Create a new `Canvas` of size `width` and `height`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let canvas = Canvas::new(20, 20);
+    /// ```
+    /// For more examples look at examples (examples/create-image.rs)
+    pub fn new(width: u32, height: u32) -> Canvas {
+        let width = max(width, 1);
+        let height = max(height, 1);
+        let pixels = vec![Colors::WHITE; (width * height) as usize];
         Canvas {
-            pixels: ps,
-            height: h,
-            width: w,
+            pixels,
+            height,
+            width,
         }
     }
 
