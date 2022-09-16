@@ -101,6 +101,8 @@ impl Canvas {
     /// # Examples
     ///
     /// ```
+    /// use pixtra::canvas::Canvas;
+    ///
     /// let canvas = Canvas::new(20, 20);
     /// ```
     /// For more examples look at examples (examples/create-image.rs)
