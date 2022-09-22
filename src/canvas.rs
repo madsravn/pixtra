@@ -117,6 +117,7 @@ impl Canvas {
         }
     }
 
+    /// Saves the canvas as an image at the path given by `filename`
     pub fn save(&self, filename: &Path) -> Result<(), ImageError> {
         let img = RgbaImage::from_vec(
             self.width,
@@ -146,6 +147,7 @@ impl Canvas {
         }
     }
 
+    /// Loads the image at the path given by `filename` and returns it as a canvas
     pub fn load(filename: &Path) -> Result<Canvas, ImageError> {
         let img = image::open(filename);
         match img {
@@ -173,10 +175,13 @@ impl Canvas {
     }
 
 
+    /// Counts the amount of pixels in the canvas equal to `pixel` 
     pub fn count_pixels(&self, pixel: &Pixel) -> u32 {
         self.find_positions_of_pixels(pixel).len() as u32
     }
 
+    /// Counts the amount of pixels in the canvas that are within the distance of `distance` of
+    /// `pixel`
     pub fn count_pixels_with_distance(&self, pixel: &Pixel, distance: f32) -> u32 {
         self.find_positions_of_pixels_with_distance(pixel, distance).len() as u32
     }
@@ -189,6 +194,7 @@ impl Canvas {
         self.pixels.iter().enumerate().filter(|(_, val)| pixel.distance(&val) < distance).map(|(i, _)| i).collect()
     }
 
+    /// Replaces all pixels in the canvas that are within the distance of `distance` of `pixel`
     pub fn replace_pixel_with_distance(mut self, find_pixel: &Pixel, distance: f32, replace_pixel: &Pixel) -> Canvas {
         let positions = self.find_positions_of_pixels_with_distance(find_pixel, distance);
         for pos in positions {
@@ -198,6 +204,7 @@ impl Canvas {
         self
     }
 
+    /// Replaces all pixels in the canvas that are within the distance of `distance` of `pixel`
     pub fn replace_pixel_with_distance_mut(&mut self, find_pixel: &Pixel, distance: f32, replace_pixel: &Pixel) {
         let positions = self.find_positions_of_pixels_with_distance(find_pixel, distance);
         for pos in positions {
@@ -205,6 +212,7 @@ impl Canvas {
         }
     }
     
+    /// Replaces all pixels in the canvas that are equal to `pixel`
     pub fn replace_pixel_with(mut self, find_pixel: &Pixel, replace_pixel: &Pixel) -> Canvas {
         let positions = self.find_positions_of_pixels(find_pixel);
         for pos in positions {
@@ -214,6 +222,7 @@ impl Canvas {
         self
     }
 
+    /// Replaces all pixels in the canvas that are equal to `pixel`
     pub fn replace_pixel_with_mut(&mut self, find_pixel: &Pixel, replace_pixel: &Pixel) {
         let positions = self.find_positions_of_pixels(find_pixel);
         for pos in positions {
@@ -221,6 +230,7 @@ impl Canvas {
         }
     }
 
+    /// Returns a canvas that is subimage starting at `(x, y)` with size `width x height`.
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
         let width = min(width, self.width - x);
         let height = min(height, self.height - y);
@@ -234,16 +244,18 @@ impl Canvas {
         c
     }
 
-    pub fn set_subimage_mut(&mut self, x: u32, y: u32, c: &Canvas) {
-        let width = min(c.width, self.width - x);
-        let height = min(c.height, self.height - y);
+    /// Inserts canvas `canvas` as a subimage at `(x, y)`
+    pub fn set_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
+        let width = min(canvas.width, self.width - x);
+        let height = min(canvas.height, self.height - y);
         for i in 0..width {
             for j in 0..height {
-                self.set_pixel_mut(x + i, y + j, &c.get_pixel(i, j));
+                self.set_pixel_mut(x + i, y + j, &canvas.get_pixel(i, j));
             }
         }
     }
 
+    /// Inserts canvas `canvas` as a subimage at `(x, y)`
     pub fn set_subimage(mut self, x: u32, y: u32, c: &Canvas) -> Canvas {
         let width = min(c.width, self.width - x);
         let height = min(c.height, self.height - y);
@@ -255,7 +267,7 @@ impl Canvas {
         self
     }
 
-    // TODO: Figure out a better construct than (x: usize, y: usize). Same for boxes
+    /// Returns pixel at position `(x, y)` from the canvas
     pub fn get_pixel(&self, x: u32, y: u32) -> Pixel {
         let x = clamp(0, self.width - 1, x);
         let y = clamp(0, self.height - 1, y);
@@ -263,15 +275,18 @@ impl Canvas {
         pixel
     }
 
+    /// Sets pixel at position `(x, y)` to `pixel`
     pub fn set_pixel(mut self, x: u32, y: u32, pixel: &Pixel) -> Canvas {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
         self
     }
 
+    /// Sets pixel at position `(x, y)` to `pixel`
     pub fn set_pixel_mut(&mut self, x: u32, y: u32, pixel: &Pixel) {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
     }
 
+    /// Turns the entire canvas grayscale.
     pub fn to_grey(&self) -> Canvas {
         let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
         Canvas {
@@ -281,11 +296,14 @@ impl Canvas {
         }
     }
 
+    /// Turns the entire canvas grayscale.
     pub fn to_grey_mut(&mut self) {
         let pixels = self.pixels.iter().map(|x| to_grey_lumiosity(x)).collect();
         self.pixels = pixels;
     }
 
+    /// Draws a square on the canvas. Draws at position `(x, y)` with size `width x height`. Color
+    /// is `color`.
     pub fn draw_square_mut(&mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) {
         if x < self.width && y < self.height {
             for i in x..min(x + w, self.width) {
@@ -298,6 +316,8 @@ impl Canvas {
         }
     }
 
+    /// Draws a square on the canvas. Draws at position `(x, y)` with size `width x height`. Color
+    /// is `color`.
     pub fn draw_square(mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) -> Canvas {
         if x < self.width && y < self.height {
             for i in x..min(x + w, self.width) {
@@ -311,6 +331,8 @@ impl Canvas {
         self
     }
 
+    /// Applies filter to entire canvas. `filter` is a function that takes a reference to the
+    /// canvas and position `(x, y)` and returns the color which should be set at that position.
     pub fn filter(&self, filter: fn(&Canvas, u32, u32) -> Pixel) -> Canvas {
         let mut canvas = Canvas::new(self.width, self.height);
         for x in 0..self.width {

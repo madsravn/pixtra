@@ -24,7 +24,7 @@ fn apply_filter(canvas: &Canvas, center: (u32, u32), kernel: &Vec<f32>, coords: 
                 acc + PixelBuilder::from(pixel.r as f32 * scale,
                                          pixel.g as f32 * scale,
                                          pixel.b as f32 * scale,
-                                         pixel.a as f32) //TODO:  Is this a good idea?
+                                         pixel.a as f32)
 
 
         });

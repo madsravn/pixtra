@@ -45,3 +45,7 @@ test = true
 [[example]]
 name = "advanced-filters"
 test = true
+
+[[example]]
+name = "pixel-builder"
+test = true

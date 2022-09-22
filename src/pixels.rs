@@ -2,6 +2,7 @@ use crate::utility::clamp;
 use std::fmt;
 use std::ops::Add;
 
+/// Example colors
 pub trait ColorTrait {
     const WHITE: Pixel;
     const BLACK: Pixel;
@@ -10,6 +11,7 @@ pub trait ColorTrait {
     const BLUE: Pixel;
 }
 
+/// Example colors
 pub struct Colors;
 
 impl ColorTrait for Colors {
@@ -46,6 +48,7 @@ impl ColorTrait for Colors {
 }
 
 //TODO: Should this have a ::new? Can we hide the struct for construction but allow reading?
+/// The pixel struct holds the red, green, blue and alpha channel in u8's.
 #[derive(Hash, Clone, Debug)]
 pub struct Pixel {
     pub r: u8,
@@ -55,6 +58,9 @@ pub struct Pixel {
 }
 
 // TODO: Can we have a generic either f32 or f64? These but none else
+/// The PixelBuilder is a construct which allows for values bigger than u8 and smaller than 0. This
+/// is used if you want to add a lot of values together and divide them later or want to use both
+/// positive and negative values.
 pub struct PixelBuilder {
     r: f32,
     g: f32,
@@ -65,7 +71,6 @@ pub struct PixelBuilder {
 impl PixelBuilder {
 
     pub fn new() -> PixelBuilder {
-
         PixelBuilder {
             r: 0f32,
             g: 0f32,
