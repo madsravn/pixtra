@@ -70,6 +70,7 @@ pub struct PixelBuilder {
 
 impl PixelBuilder {
 
+    /// Creates a new `PixelBuilder` with initial values `(r, g, b, a) = (0f32, 0f32, 0f32, 0f32)` 
     pub fn new() -> PixelBuilder {
         PixelBuilder {
             r: 0f32,
@@ -79,6 +80,8 @@ impl PixelBuilder {
         }
     }
 
+    /// Creates a new `PixelBuilder` with initial values `(r, g, b, a) = (red, green, blue,
+    /// alpha)`. 
     pub fn from(red: f32, green: f32, blue: f32, alpha: f32) -> PixelBuilder {
         PixelBuilder { r: red, g: green, b: blue, a: alpha}
     }
