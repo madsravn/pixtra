@@ -1,20 +1,6 @@
-// http://www.johndcook.com/blog/2009/08/24/algorithms-convert-color-grayscale/
-// mean = avg[0] * 0.299 + avg[1] * 0.587 + avg[2] * 0.114
-
-//TODO: rename to pixel_utils
-//
-//
-//pub fn lightness, luminosity, average, quad(rename) and custom
-//
-//
-//
-//Convert other way is just The quick and dirty approach is to repeat the grayscale intensity for each component of RGB. So, if you have grayscale 120, it translates to RGB (120, 120, 120).
-
 use crate::canvas::Canvas;
 use crate::pixels::Pixel;
 use std::cmp;
-
-// TO AND FROM GREY
 
 pub fn to_grey_lightness(p: &Pixel) -> Pixel {
     let lightness = max(p.r, p.g, p.b) + min(p.r, p.g, p.b) / 2;
@@ -27,16 +13,15 @@ pub fn to_grey_average(p: &Pixel) -> Pixel {
 }
 
 pub fn to_grey_lumiosity(p: &Pixel) -> Pixel {
-    to_grey_custom_qualifier(p, 0.21, 0.72, 0.07)
+    to_grey_custom(p, 0.21, 0.72, 0.07)
 }
 
 // Used for finding error
 pub fn to_grey_mean(p: &Pixel) -> Pixel {
-    to_grey_custom_qualifier(p, 0.299, 0.587, 0.114)
+    to_grey_custom(p, 0.299, 0.587, 0.114)
 }
 
-// TODO: What the EFFE is it called?
-pub fn to_grey_custom_qualifier(p: &Pixel, v1: f32, v2: f32, v3: f32) -> Pixel {
+pub fn to_grey_custom(p: &Pixel, v1: f32, v2: f32, v3: f32) -> Pixel {
     let value = (p.r as f32 * v1 + p.g as f32 * v2 + p.b as f32 * v3) as u8;
     from_grey(value)
 }
@@ -50,6 +35,7 @@ pub fn from_grey(grey: u8) -> Pixel {
     }
 }
 
+/// Three way maximum function
 pub fn max<T>(v1: T, v2: T, v3: T) -> T
 where
     T: Ord,
@@ -57,6 +43,7 @@ where
     cmp::max(v1, cmp::max(v2, v3))
 }
 
+/// Three way minimum function
 pub fn min<T>(v1: T, v2: T, v3: T) -> T
 where
     T: Ord,
@@ -64,8 +51,10 @@ where
     cmp::min(v1, cmp::min(v2, v3))
 }
 
-// TODO: Make a utility class
+/// Clamp value `value` to be between `min` and `max`. 
+/// `min` needs to be less than `max`
 pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
+    assert!(min<max);
     if val > max {
         return max;
     }
@@ -75,7 +64,6 @@ pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
     val
 }
 
-// COMPUTING ERROR
 
 pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
     (
