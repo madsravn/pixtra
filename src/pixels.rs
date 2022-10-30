@@ -167,6 +167,10 @@ impl Pixel {
         PixelBuilder::new()
     }
 
+    pub fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Pixel {
+        Pixel { r: red, g: green, b: blue, a: alpha}
+    }
+
     pub fn from(red: f32, green: f32, blue: f32, alpha: f32) -> Pixel {
         Pixel {
             r: clamp(0f32, u8::max_value() as f32, red as f32) as u8,

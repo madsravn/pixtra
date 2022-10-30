@@ -35,6 +35,11 @@ name = "create-image"
 test = true
 
 [[example]]
+name = "filling"
+test = true
+
+
+[[example]]
 name = "count-and-replace"
 test = true
 

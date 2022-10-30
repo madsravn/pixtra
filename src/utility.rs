@@ -123,6 +123,10 @@ pub fn apply_alpha_color(color_one: f32, alpha_one: f32, color_two: f32, alpha_t
 }
 
 pub fn overlap_colors(current_pixel: &Pixel, new_pixel: &Pixel) -> Pixel {
+    // TODO !!! FIX !!!
+    if new_pixel.a == 255 {
+        return new_pixel.clone();
+    }
     let pixel_one_normalized = new_pixel.normalize();
     let pixel_two_normalized = current_pixel.normalize();
     let new_a = (1.0 - pixel_one_normalized.3) * pixel_two_normalized.3 + pixel_one_normalized.3;

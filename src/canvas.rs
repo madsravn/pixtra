@@ -117,6 +117,17 @@ impl Canvas {
         }
     }
 
+    pub fn new_with_background(width: u32, height: u32, color: Pixel) -> Canvas {
+        let width = max(width, 1);
+        let height = max(height, 1);
+        let pixels = vec![color; (width * height) as usize];
+        Canvas {
+            pixels,
+            height,
+            width,
+        }
+    }
+
     /// Saves the canvas as an image at the path given by `filename`
     pub fn save(&self, filename: &Path) -> Result<(), ImageError> {
         let img = RgbaImage::from_vec(
@@ -328,6 +339,33 @@ impl Canvas {
                 }
             }
         }
+        self
+    }
+
+    // Start at (x, y). Get color. Test one step to up, down, left, right.
+    // Recursively test.
+    // Only visit the same pixel once.
+    //
+    // Use a vec<(x,y)> as queue for visiting next pixel.
+    // Use vec<(x,y)> for pixels that we have visited.
+    // While !vec_visit_next.is_empty is run condition
+    pub fn fill(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
+        let mut visit_next: Vec<(u32, u32)> = Vec::new();
+        let mut visited: Vec<(u32, u32)> = Vec::new();
+        let find_color = self.get_pixel(x, y);
+        visit_next.push((x, y));
+        while !visit_next.is_empty() {
+            let pos = visit_next.pop().expect("Should contain an element");
+            if !visited.contains(&pos) {
+                visited.push(pos);
+            }
+
+
+
+        }
+
+
+        self.set_pixel_mut(x, y, color);
         self
     }
 
