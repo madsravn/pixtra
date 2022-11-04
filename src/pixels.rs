@@ -69,21 +69,25 @@ pub struct PixelBuilder {
 }
 
 impl PixelBuilder {
-
-    /// Creates a new `PixelBuilder` with initial values `(r, g, b, a) = (0f32, 0f32, 0f32, 0f32)` 
+    /// Creates a new `PixelBuilder` with initial values `(r, g, b, a) = (0f32, 0f32, 0f32, 0f32)`
     pub fn new() -> PixelBuilder {
         PixelBuilder {
             r: 0f32,
             g: 0f32,
             b: 0f32,
-            a: 0f32
+            a: 0f32,
         }
     }
 
     /// Creates a new `PixelBuilder` with initial values `(r, g, b, a) = (red, green, blue,
-    /// alpha)`. 
+    /// alpha)`.
     pub fn from(red: f32, green: f32, blue: f32, alpha: f32) -> PixelBuilder {
-        PixelBuilder { r: red, g: green, b: blue, a: alpha}
+        PixelBuilder {
+            r: red,
+            g: green,
+            b: blue,
+            a: alpha,
+        }
     }
 
     pub fn build(&self) -> Pixel {
@@ -134,7 +138,6 @@ impl Add<Pixel> for PixelBuilder {
     }
 }
 
-
 impl Add for Pixel {
     type Output = Pixel;
 
@@ -162,13 +165,17 @@ impl Add<PixelBuilder> for Pixel {
 }
 
 impl Pixel {
-
     pub fn builder() -> PixelBuilder {
         PixelBuilder::new()
     }
 
     pub fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Pixel {
-        Pixel { r: red, g: green, b: blue, a: alpha}
+        Pixel {
+            r: red,
+            g: green,
+            b: blue,
+            a: alpha,
+        }
     }
 
     pub fn from(red: f32, green: f32, blue: f32, alpha: f32) -> Pixel {
@@ -178,8 +185,6 @@ impl Pixel {
             b: clamp(0f32, u8::max_value() as f32, blue as f32) as u8,
             a: clamp(0f32, u8::max_value() as f32, alpha as f32) as u8,
         }
-
-
     }
 
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
@@ -262,13 +267,26 @@ impl Pixel {
 mod tests {
     use super::*;
 
-    // TODO: This is ugly. Do we need to implement for &Pixel and &PixelBuilder as well? 
+    // TODO: This is ugly. Do we need to implement for &Pixel and &PixelBuilder as well?
     #[test]
     fn pixel_builder_simple() {
         let builder = Pixel::builder();
-        let pixel = Pixel {r: 1, g: 2, b: 3, a: 4};
+        let pixel = Pixel {
+            r: 1,
+            g: 2,
+            b: 3,
+            a: 4,
+        };
         let resulting_pixel = (builder + pixel.clone() + pixel.clone() + pixel.clone()).build();
-        assert_eq!(resulting_pixel, Pixel {r: 3, g: 6, b: 9, a: 12});
+        assert_eq!(
+            resulting_pixel,
+            Pixel {
+                r: 3,
+                g: 6,
+                b: 9,
+                a: 12
+            }
+        );
     }
 
     #[test]
@@ -474,5 +492,5 @@ mod tests {
                 a: 7
             }
         );
-}
     }
+}

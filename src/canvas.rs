@@ -21,7 +21,7 @@ pub struct Canvas {
 
 #[derive(Clone, Debug)]
 pub struct Point {
-    pub x: u32, 
+    pub x: u32,
     pub y: u32,
 }
 
@@ -36,8 +36,6 @@ pub struct Rect {
     pub start: Point,
     pub size: Size,
 }
-
-
 
 #[derive(Debug)]
 pub enum ImageError {
@@ -185,8 +183,7 @@ impl Canvas {
         }
     }
 
-
-    /// Counts the amount of pixels in the canvas equal to `pixel` 
+    /// Counts the amount of pixels in the canvas equal to `pixel`
     pub fn count_pixels(&self, pixel: &Pixel) -> u32 {
         self.find_positions_of_pixels(pixel).len() as u32
     }
@@ -194,19 +191,35 @@ impl Canvas {
     /// Counts the amount of pixels in the canvas that are within the distance of `distance` of
     /// `pixel`
     pub fn count_pixels_with_distance(&self, pixel: &Pixel, distance: f32) -> u32 {
-        self.find_positions_of_pixels_with_distance(pixel, distance).len() as u32
+        self.find_positions_of_pixels_with_distance(pixel, distance)
+            .len() as u32
     }
 
     fn find_positions_of_pixels(&self, pixel: &Pixel) -> Vec<usize> {
-        self.pixels.iter().enumerate().filter(|(_, val)| val == &pixel).map(|(i, _)| i).collect()
+        self.pixels
+            .iter()
+            .enumerate()
+            .filter(|(_, val)| val == &pixel)
+            .map(|(i, _)| i)
+            .collect()
     }
 
     fn find_positions_of_pixels_with_distance(&self, pixel: &Pixel, distance: f32) -> Vec<usize> {
-        self.pixels.iter().enumerate().filter(|(_, val)| pixel.distance(&val) < distance).map(|(i, _)| i).collect()
+        self.pixels
+            .iter()
+            .enumerate()
+            .filter(|(_, val)| pixel.distance(&val) < distance)
+            .map(|(i, _)| i)
+            .collect()
     }
 
     /// Replaces all pixels in the canvas that are within the distance of `distance` of `pixel`
-    pub fn replace_pixel_with_distance(mut self, find_pixel: &Pixel, distance: f32, replace_pixel: &Pixel) -> Canvas {
+    pub fn replace_pixel_with_distance(
+        mut self,
+        find_pixel: &Pixel,
+        distance: f32,
+        replace_pixel: &Pixel,
+    ) -> Canvas {
         let positions = self.find_positions_of_pixels_with_distance(find_pixel, distance);
         for pos in positions {
             self.pixels[pos] = replace_pixel.clone();
@@ -216,13 +229,18 @@ impl Canvas {
     }
 
     /// Replaces all pixels in the canvas that are within the distance of `distance` of `pixel`
-    pub fn replace_pixel_with_distance_mut(&mut self, find_pixel: &Pixel, distance: f32, replace_pixel: &Pixel) {
+    pub fn replace_pixel_with_distance_mut(
+        &mut self,
+        find_pixel: &Pixel,
+        distance: f32,
+        replace_pixel: &Pixel,
+    ) {
         let positions = self.find_positions_of_pixels_with_distance(find_pixel, distance);
         for pos in positions {
             self.pixels[pos] = replace_pixel.clone();
         }
     }
-    
+
     /// Replaces all pixels in the canvas that are equal to `pixel`
     pub fn replace_pixel_with(mut self, find_pixel: &Pixel, replace_pixel: &Pixel) -> Canvas {
         let positions = self.find_positions_of_pixels(find_pixel);
@@ -342,30 +360,45 @@ impl Canvas {
         self
     }
 
-    // Start at (x, y). Get color. Test one step to up, down, left, right.
-    // Recursively test.
-    // Only visit the same pixel once.
-    //
-    // Use a vec<(x,y)> as queue for visiting next pixel.
-    // Use vec<(x,y)> for pixels that we have visited.
-    // While !vec_visit_next.is_empty is run condition
+    fn within_range(&self, x: i64, y: i64, pos: &(i64, i64)) -> bool {
+        let result = pos.0 + x > -1
+            && pos.0 + x < self.width.into()
+            && pos.1 + y > -1
+            && pos.1 + y < self.height.into();
+
+        result
+    }
+
+    // TODO: This can be much, much prettier. Rethink
     pub fn fill(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
-        let mut visit_next: Vec<(u32, u32)> = Vec::new();
-        let mut visited: Vec<(u32, u32)> = Vec::new();
+        let mut visit_next: Vec<(i64, i64)> = vec![(x.into(), y.into())];
+        let mut visited: Vec<(i64, i64)> = Vec::new();
+        let mut change_color: Vec<(u32, u32)> = vec![(x, y)];
+        let checks: Vec<(i64, i64)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
         let find_color = self.get_pixel(x, y);
-        visit_next.push((x, y));
+
+        // TODO: Can this be done with a iter_mut() or something?
         while !visit_next.is_empty() {
             let pos = visit_next.pop().expect("Should contain an element");
-            if !visited.contains(&pos) {
-                visited.push(pos);
+            // TODO: This can be moved into the block
+            visited.push(pos);
+            for position in checks
+                .iter()
+                .filter(|c| self.within_range(pos.0, pos.1, c))
+                .map(|c| (pos.0 as i64 + c.0, pos.1 as i64 + c.1))
+                .map(|p| (self.get_pixel(p.0 as u32, p.1 as u32), p))
+                .filter(|(check_pixel, _p)| *check_pixel == find_color)
+                .map(|(_, p)| p)
+                .filter(|p| !visited.contains(p))
+            {
+                    change_color.push((position.0 as u32, position.1 as u32));
+                    visit_next.push(position);
             }
-
-
-
         }
 
-
-        self.set_pixel_mut(x, y, color);
+        for pos in change_color.iter() {
+            self.set_pixel_mut(pos.0, pos.1, color);
+        }
         self
     }
 

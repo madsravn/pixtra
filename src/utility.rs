@@ -51,10 +51,10 @@ where
     cmp::min(v1, cmp::min(v2, v3))
 }
 
-/// Clamp value `value` to be between `min` and `max`. 
+/// Clamp value `value` to be between `min` and `max`.
 /// `min` needs to be less than `max`
 pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
-    assert!(min<max);
+    assert!(min < max);
     if val > max {
         return max;
     }
@@ -63,7 +63,6 @@ pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
     }
     val
 }
-
 
 pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
     (
@@ -149,12 +148,5 @@ pub fn overlap_colors(current_pixel: &Pixel, new_pixel: &Pixel) -> Pixel {
         pixel_two_normalized.3,
     ) * new_a;
 
-    let new_color = Pixel {
-        a: (new_a * 255.0) as u8,
-        r: (new_r * 255.0) as u8,
-        b: (new_g * 255.0) as u8,
-        g: (new_b * 255.0) as u8,
-    };
-
-    new_color
+    Pixel::from(new_r, new_g, new_b, new_a)
 }
