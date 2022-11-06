@@ -13,10 +13,9 @@ use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct Canvas {
-    // TODO: Should this be private?
-    pub pixels: Vec<Pixel>,
-    pub height: u32,
-    pub width: u32,
+    pixels: Vec<Pixel>,
+    height: u32,
+    width: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -113,6 +112,25 @@ impl Canvas {
             height,
             width,
         }
+    }
+
+    pub fn new_with_data(width: u32, height: u32, data: Vec<Pixel>) -> Canvas {
+        Canvas {
+            width,
+            height,
+            pixels: data,
+        }
+    }
+
+    pub fn dimensions(&self) -> Size {
+        Size {
+            width: self.width,
+            height: self.height
+        }
+    }
+
+    pub fn pixels(&self) -> std::slice::Iter<'_, Pixel> {
+        self.pixels.iter()
     }
 
     pub fn new_with_background(width: u32, height: u32, color: Pixel) -> Canvas {

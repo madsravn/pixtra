@@ -1,6 +1,7 @@
 use crate::canvas::Canvas;
 use crate::pixels::Pixel;
 use std::cmp;
+use std::collections::HashMap;
 
 pub fn to_grey_lightness(p: &Pixel) -> Pixel {
     let lightness = max(p.r, p.g, p.b) + min(p.r, p.g, p.b) / 2;
@@ -73,24 +74,30 @@ pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
     )
 }
 
+// TODO: We can do this with a fold and hashmap, right?
+pub fn count_colors(c: &Canvas) -> HashMap<Pixel, usize> {
+    let mut map = HashMap::new();
+    for pixel in c.pixels() {
+        *map.entry(pixel.clone()).or_insert(0) += 1;
+    }
+    map
+}
+
 pub fn diff(c1: &Canvas, c2: &Canvas) -> Canvas {
     let c = Canvas::new(1, 1);
     c
 }
 
 pub fn diff_debug(c1: &Canvas, c2: &Canvas) -> Canvas {
-    let res = if c1.width == c2.width && c1.height == c2.height {
+    let c1_dim = c1.dimensions();
+    let c2_dim = c2.dimensions();
+    let res = if c1_dim.width == c2_dim.width && c1_dim.height == c2_dim.height {
         let pixels = c1
-            .pixels
-            .iter()
-            .zip(c2.pixels.iter())
+            .pixels()
+            .zip(c2.pixels())
             .map(|(p1, p2)| p1.diff(p2))
             .collect();
-        Canvas {
-            width: c1.width,
-            height: c1.height,
-            pixels,
-        }
+        Canvas::new_with_data(c1_dim.width, c1_dim.height, pixels)
     } else {
         c1.clone()
     };
@@ -99,9 +106,12 @@ pub fn diff_debug(c1: &Canvas, c2: &Canvas) -> Canvas {
 
 // https://stackoverflow.com/questions/20271479/what-does-it-mean-to-get-the-mse-mean-error-squared-for-2-images
 pub fn error(c1: &Canvas, c2: &Canvas) -> u128 {
-    let width = c1.width.min(c2.width);
-    let height = c1.height.min(c2.height);
+    let c1_dim = c1.dimensions();
+    let c2_dim = c2.dimensions();
+    let width = c1_dim.width.min(c2_dim.width);
+    let height = c1_dim.height.min(c2_dim.height);
     let (mut r, mut g, mut b, mut a) = (0u128, 0u128, 0u128, 0u128);
+    // TODO: Get iterator from both, zip them and fold and then map
     for x in 0..width {
         for y in 0..height {
             let p1 = c1.get_pixel(x, y);
