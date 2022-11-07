@@ -18,7 +18,8 @@ fn gaussian_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
         (1, 1),
     ];
     // For simplicity, we will leave out the edges of the picture.
-    if x > 0 && y > 0 && x < canvas.width - 1 && y < canvas.height - 1 {
+    let canvas_size = canvas.dimensions();
+    if x > 0 && y > 0 && x < canvas_size.width - 1 && y < canvas_size.height - 1 {
         let pixel = apply_filter(canvas, (x, y), &kernel, &coords);
         return pixel;
     }
@@ -63,7 +64,8 @@ fn lap_edge_detection_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
         (1, 1),
     ];
     // For simplicity, we will leave out the edges of the picture.
-    if x > 0 && y > 0 && x < canvas.width - 1 && y < canvas.height - 1 {
+    let canvas_size = canvas.dimensions();
+    if x > 0 && y > 0 && x < canvas_size.width - 1 && y < canvas_size.height - 1 {
         let pixel = apply_filter(canvas, (x, y), &kernel, &coords);
         return pixel;
     }
@@ -85,7 +87,8 @@ fn prewitt_edge_detection_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
         (1, 1),
     ];
 
-    if x > 0 && y > 0 && x < canvas.width - 1 && y < canvas.height - 1 {
+    let canvas_size = canvas.dimensions();
+    if x > 0 && y > 0 && x < canvas_size.width - 1 && y < canvas_size.height - 1 {
         let pixel_one = apply_filter(canvas, (x, y), &kernel_one, &coords);
         let pixel_two = apply_filter(canvas, (x, y), &kernel_two, &coords);
 

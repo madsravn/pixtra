@@ -125,7 +125,7 @@ impl Canvas {
     pub fn dimensions(&self) -> Size {
         Size {
             width: self.width,
-            height: self.height
+            height: self.height,
         }
     }
 
@@ -409,8 +409,8 @@ impl Canvas {
                 .map(|(_, p)| p)
                 .filter(|p| !visited.contains(p))
             {
-                    change_color.push((position.0 as u32, position.1 as u32));
-                    visit_next.push(position);
+                change_color.push((position.0 as u32, position.1 as u32));
+                visit_next.push(position);
             }
         }
 

@@ -11,7 +11,8 @@ fn main() {
     };
 
     let canvas = Canvas::load(Path::new("assets/mario-yellow.png")).unwrap();
-    let find_pixel = canvas.get_pixel(canvas.width / 2, canvas.height / 2);
+    let canvas_size = canvas.dimensions();
+    let find_pixel = canvas.get_pixel(canvas_size.width / 2, canvas_size.height / 2);
     let pixel_count = canvas.count_pixels(&find_pixel);
     println!("We found {} pixels with color {}", pixel_count, find_pixel);
 
@@ -40,7 +41,8 @@ fn main() {
         .save(Path::new("mario-gray-two.png"))
         .unwrap();
 
-    let position = (canvas.width / 2 - 100, canvas.height / 2 - 100);
+    let canvas_size = canvas.dimensions();
+    let position = (canvas_size.width / 2 - 100, canvas_size.height / 2 - 100);
     let sub_image = canvas.get_subimage(position.0, position.1, 200, 200);
     let sub_image = sub_image.replace_pixel_with(&find_pixel, &color);
     let canvas = canvas.set_subimage(position.0, position.1, &sub_image);
