@@ -1,4 +1,5 @@
 use crate::utility::clamp;
+use rand::distributions::{Distribution, Uniform};
 use std::fmt;
 use std::ops::Add;
 
@@ -185,6 +186,14 @@ impl Pixel {
             b: clamp(0f32, u8::max_value() as f32, blue as f32) as u8,
             a: clamp(0f32, u8::max_value() as f32, alpha as f32) as u8,
         }
+    }
+
+    pub fn random() -> Pixel {
+        let mut rng = rand::thread_rng();
+        let random = Uniform::from(0..=255);
+        Pixel::new(random.sample(&mut rng).into(), random.sample(&mut rng).into(), random.sample(&mut rng).into(), 255)
+
+
     }
 
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
