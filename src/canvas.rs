@@ -46,6 +46,14 @@ pub enum ImageError {
     IoError(String),
 }
 
+impl PartialEq for Size {
+    fn eq(&self, other: &Self) -> bool {
+        self.width == other.width && self.height == other.height
+    }
+}
+
+impl Eq for Size {}
+
 impl PartialEq for Canvas {
     fn eq(&self, other: &Self) -> bool {
         if self.width == other.width && self.height == other.height {
@@ -64,7 +72,7 @@ impl Eq for Canvas {}
 // TODO!
 impl fmt::Display for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "()")
+        write!(f, "Image with {} pixels and dimensions: ({}, {}).", self.pixels.len(), self.width, self.height)
     }
 }
 
@@ -114,6 +122,8 @@ impl Canvas {
         }
     }
 
+    /// Creates a new `Canvas` of size `width` and `height` with initial data of `data`
+    // TODO: Make it so that we align size of `data` to align with `width*height`.
     pub fn new_with_data(width: u32, height: u32, data: Vec<Pixel>) -> Canvas {
         Canvas {
             width,
@@ -122,6 +132,7 @@ impl Canvas {
         }
     }
 
+    /// Retrieves width and height of canvas in a `Size` struct.
     pub fn dimensions(&self) -> Size {
         Size {
             width: self.width,
@@ -129,10 +140,15 @@ impl Canvas {
         }
     }
 
+    /// Returns an iterator for all the pixels in the `Canvas`.
+    // TODO: Should this return the positions of the pixels as well or do we want a utility
+    // function for that? 
     pub fn pixels(&self) -> std::slice::Iter<'_, Pixel> {
         self.pixels.iter()
     }
 
+    /// Creates a new `Canvas` of size `width` and `height` with all pixels initially set to
+    /// `color`.
     pub fn new_with_background(width: u32, height: u32, color: Pixel) -> Canvas {
         let width = max(width, 1);
         let height = max(height, 1);
@@ -440,3 +456,34 @@ impl Canvas {
 
     }*/
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utility::count_colors;
+    use crate::pixels::Pixel;
+
+    #[test]
+    fn clean_canvas() {
+        let canvas = Canvas::new(20, 20);
+        let dimensions = canvas.dimensions();
+        assert_eq!(dimensions, Size { width: 20, height: 20 });
+
+        let counts = count_colors(&canvas);
+        assert_eq!(counts.keys().len(), 1);
+        assert_eq!(counts.get(&Pixel::new(255, 255, 255, 255)), Some(&400));
+    }
+
+    #[test]
+    fn clean_canvas_with_background() {
+        let color = Pixel::random();
+        let canvas = Canvas::new_with_background(20, 20, color.clone());
+        let dimensions = canvas.dimensions();
+        assert_eq!(dimensions, Size { width: 20, height: 20 });
+
+        let counts = count_colors(&canvas);
+        assert_eq!(counts.keys().len(), 1);
+        assert_eq!(counts.get(&color), Some(&400));
+    }
+}
+

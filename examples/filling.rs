@@ -19,8 +19,6 @@ fn main() {
     canvas.save(Path::new("testing.png")).unwrap();
 }
 
-// TODO: Test by making a color profiler.
-//
 #[cfg(test)]
 mod tests {
     use super::*;
