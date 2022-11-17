@@ -4,6 +4,7 @@ use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::cmp::{max, min};
 use std::fmt;
 use std::path::Path;
+use std::collections::HashMap;
 
 //TODO: Should I use u32 or usize? Rely on image crate?
 //
@@ -406,16 +407,15 @@ impl Canvas {
     // TODO: This can be much, much prettier. Rethink
     pub fn fill(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
         let mut visit_next: Vec<(i64, i64)> = vec![(x.into(), y.into())];
-        let mut visited: Vec<(i64, i64)> = Vec::new();
+        let mut visited: HashMap<(i64, i64), i64> = HashMap::new();
         let mut change_color: Vec<(u32, u32)> = vec![(x, y)];
         let checks: Vec<(i64, i64)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
         let find_color = self.get_pixel(x, y);
 
         // TODO: Can this be done with a iter_mut() or something?
-        while !visit_next.is_empty() {
-            let pos = visit_next.pop().expect("Should contain an element");
+        while let Some(pos) = visit_next.pop() {
             // TODO: This can be moved into the block
-            visited.push(pos);
+            visited.insert(pos, 1);
             for position in checks
                 .iter()
                 .filter(|c| self.within_range(pos.0, pos.1, c))
@@ -423,7 +423,7 @@ impl Canvas {
                 .map(|p| (self.get_pixel(p.0 as u32, p.1 as u32), p))
                 .filter(|(check_pixel, _p)| *check_pixel == find_color)
                 .map(|(_, p)| p)
-                .filter(|p| !visited.contains(p))
+                .filter(|p| !visited.contains_key(p))
             {
                 change_color.push((position.0 as u32, position.1 as u32));
                 visit_next.push(position);
