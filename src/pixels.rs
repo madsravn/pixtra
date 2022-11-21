@@ -191,9 +191,12 @@ impl Pixel {
     pub fn random() -> Pixel {
         let mut rng = rand::thread_rng();
         let random = Uniform::from(0..=255);
-        Pixel::new(random.sample(&mut rng).into(), random.sample(&mut rng).into(), random.sample(&mut rng).into(), 255)
-
-
+        Pixel::new(
+            random.sample(&mut rng).into(),
+            random.sample(&mut rng).into(),
+            random.sample(&mut rng).into(),
+            255,
+        )
     }
 
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {

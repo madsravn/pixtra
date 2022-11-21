@@ -2,9 +2,9 @@ use crate::pixels::{ColorTrait, Colors, Pixel};
 use crate::utility::{clamp, overlap_colors, to_grey_lumiosity};
 use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::cmp::{max, min};
+use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
-use std::collections::HashMap;
 
 //TODO: Should I use u32 or usize? Rely on image crate?
 //
@@ -73,7 +73,13 @@ impl Eq for Canvas {}
 // TODO!
 impl fmt::Display for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Image with {} pixels and dimensions: ({}, {}).", self.pixels.len(), self.width, self.height)
+        write!(
+            f,
+            "Image with {} pixels and dimensions: ({}, {}).",
+            self.pixels.len(),
+            self.width,
+            self.height
+        )
     }
 }
 
@@ -143,7 +149,7 @@ impl Canvas {
 
     /// Returns an iterator for all the pixels in the `Canvas`.
     // TODO: Should this return the positions of the pixels as well or do we want a utility
-    // function for that? 
+    // function for that?
     pub fn pixels(&self) -> std::slice::Iter<'_, Pixel> {
         self.pixels.iter()
     }
@@ -405,7 +411,7 @@ impl Canvas {
     }
 
     // TODO: This can be much, much prettier. Rethink
-    pub fn fill(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
+    pub fn fill_orig(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
         let mut visit_next: Vec<(i64, i64)> = vec![(x.into(), y.into())];
         let mut visited: HashMap<(i64, i64), i64> = HashMap::new();
         let mut change_color: Vec<(u32, u32)> = vec![(x, y)];
@@ -436,6 +442,38 @@ impl Canvas {
         self
     }
 
+    // By orlp
+    fn in_bounds(&self, x: i64, y: i64) -> bool {
+        x >= 0 && x < self.width.into() && y >= 0 && y < self.height.into()
+    }
+
+    // By orlp
+    fn try_get_pixel(&self, x: i64, y: i64) -> Option<&Pixel> {
+        self.in_bounds(x, y)
+            .then(|| &self.pixels[(self.width as i64 * y + x) as usize])
+    }
+
+    // By orlp
+    pub fn fill(mut self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
+        let find_color = self.get_pixel(x, y);
+        if fill_color == &find_color {
+            return self;
+        }
+
+        let mut to_visit = vec![(x as i64, y as i64)];
+        while let Some((x, y)) = to_visit.pop() {
+            self.set_pixel_mut(x as u32, y as u32, fill_color);
+
+            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
+                    to_visit.push((x + dx, y + dy));
+                }
+            }
+        }
+
+        self
+    }
+
     /// Applies filter to entire canvas. `filter` is a function that takes a reference to the
     /// canvas and position `(x, y)` and returns the color which should be set at that position.
     pub fn filter(&self, filter: fn(&Canvas, u32, u32) -> Pixel) -> Canvas {
@@ -460,14 +498,20 @@ impl Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utility::count_colors;
     use crate::pixels::Pixel;
+    use crate::utility::count_colors;
 
     #[test]
     fn clean_canvas() {
         let canvas = Canvas::new(20, 20);
         let dimensions = canvas.dimensions();
-        assert_eq!(dimensions, Size { width: 20, height: 20 });
+        assert_eq!(
+            dimensions,
+            Size {
+                width: 20,
+                height: 20
+            }
+        );
 
         let counts = count_colors(&canvas);
         assert_eq!(counts.keys().len(), 1);
@@ -479,11 +523,16 @@ mod tests {
         let color = Pixel::random();
         let canvas = Canvas::new_with_background(20, 20, color.clone());
         let dimensions = canvas.dimensions();
-        assert_eq!(dimensions, Size { width: 20, height: 20 });
+        assert_eq!(
+            dimensions,
+            Size {
+                width: 20,
+                height: 20
+            }
+        );
 
         let counts = count_colors(&canvas);
         assert_eq!(counts.keys().len(), 1);
         assert_eq!(counts.get(&color), Some(&400));
     }
 }
-
