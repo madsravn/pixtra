@@ -2,6 +2,7 @@ use crate::pixels::{ColorTrait, Colors, Pixel};
 use crate::utility::{clamp, overlap_colors, to_grey_lumiosity};
 use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::cmp::{max, min};
+use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 
@@ -410,18 +411,17 @@ impl Canvas {
     }
 
     // TODO: This can be much, much prettier. Rethink
-    pub fn fill(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
+    pub fn fill_orig(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
         let mut visit_next: Vec<(i64, i64)> = vec![(x.into(), y.into())];
-        let mut visited: Vec<(i64, i64)> = Vec::new();
+        let mut visited: HashMap<(i64, i64), i64> = HashMap::new();
         let mut change_color: Vec<(u32, u32)> = vec![(x, y)];
         let checks: Vec<(i64, i64)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
         let find_color = self.get_pixel(x, y);
 
         // TODO: Can this be done with a iter_mut() or something?
-        while !visit_next.is_empty() {
-            let pos = visit_next.pop().expect("Should contain an element");
+        while let Some(pos) = visit_next.pop() {
             // TODO: This can be moved into the block
-            visited.push(pos);
+            visited.insert(pos, 1);
             for position in checks
                 .iter()
                 .filter(|c| self.within_range(pos.0, pos.1, c))
@@ -429,7 +429,7 @@ impl Canvas {
                 .map(|p| (self.get_pixel(p.0 as u32, p.1 as u32), p))
                 .filter(|(check_pixel, _p)| *check_pixel == find_color)
                 .map(|(_, p)| p)
-                .filter(|p| !visited.contains(p))
+                .filter(|p| !visited.contains_key(p))
             {
                 change_color.push((position.0 as u32, position.1 as u32));
                 visit_next.push(position);
@@ -439,6 +439,38 @@ impl Canvas {
         for pos in change_color.iter() {
             self.set_pixel_mut(pos.0, pos.1, color);
         }
+        self
+    }
+
+    // By orlp
+    fn in_bounds(&self, x: i64, y: i64) -> bool {
+        x >= 0 && x < self.width.into() && y >= 0 && y < self.height.into()
+    }
+
+    // By orlp
+    fn try_get_pixel(&self, x: i64, y: i64) -> Option<&Pixel> {
+        self.in_bounds(x, y)
+            .then(|| &self.pixels[(self.width as i64 * y + x) as usize])
+    }
+
+    // By orlp
+    pub fn fill(mut self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
+        let find_color = self.get_pixel(x, y);
+        if fill_color == &find_color {
+            return self;
+        }
+
+        let mut to_visit = vec![(x as i64, y as i64)];
+        while let Some((x, y)) = to_visit.pop() {
+            self.set_pixel_mut(x as u32, y as u32, fill_color);
+
+            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
+                    to_visit.push((x + dx, y + dy));
+                }
+            }
+        }
+
         self
     }
 
