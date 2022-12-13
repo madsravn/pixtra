@@ -59,7 +59,7 @@ mod tests {
         assert_eq!(counts.keys().len(), 1);
 
         let color_two = Pixel::random();
-        let canvas = canvas.fill(1,1, &color_two);
+        let canvas = canvas.fill(1, 1, &color_two);
         let counts = count_colors(&canvas);
         assert_eq!(counts.get(&color_two), Some(&10000));
         assert_eq!(counts.keys().len(), 1);
@@ -75,7 +75,7 @@ mod tests {
 
         let color_two = Pixel::random();
         let canvas_one = canvas.clone().fill(1, 1, &color_two);
-        let canvas_two = canvas.clone().fill(2,2,  &color_two);
+        let canvas_two = canvas.clone().fill(2, 2, &color_two);
         assert_eq!(canvas_one, canvas_two);
     }
 
@@ -112,8 +112,8 @@ mod tests {
         let color_two = Pixel::random();
         let color_three = Pixel::random();
         let canvas = Canvas::new_with_background(100, 100, color_one.clone())
-        .draw_square(10, 10, 80, 80, &color_two)
-        .draw_square(20, 20, 60, 60, &color_three);
+            .draw_square(10, 10, 80, 80, &color_two)
+            .draw_square(20, 20, 60, 60, &color_three);
 
         let color_four = Pixel::random();
         let canvas = canvas.fill(1, 1, &color_four);
@@ -124,15 +124,11 @@ mod tests {
         assert_eq!(counts.get(&color_four), Some(&3600));
 
         //TODO: Not finished
-
     }
-
-
 
     // More tests:
     // Doesn't do diagonal.
     // Doesn't fill over same color - if "line" is red and we color the black with a red color.
     // Filling inner and outer of square-in-square
     // Slowly fill an inner-out-square
-
 }

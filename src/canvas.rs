@@ -72,7 +72,13 @@ impl Eq for Canvas {}
 // TODO!
 impl fmt::Display for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Image with {} pixels and dimensions: ({}, {}).", self.pixels.len(), self.width, self.height)
+        write!(
+            f,
+            "Image with {} pixels and dimensions: ({}, {}).",
+            self.pixels.len(),
+            self.width,
+            self.height
+        )
     }
 }
 
@@ -142,7 +148,7 @@ impl Canvas {
 
     /// Returns an iterator for all the pixels in the `Canvas`.
     // TODO: Should this return the positions of the pixels as well or do we want a utility
-    // function for that? 
+    // function for that?
     pub fn pixels(&self) -> std::slice::Iter<'_, Pixel> {
         self.pixels.iter()
     }
@@ -460,14 +466,20 @@ impl Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utility::count_colors;
     use crate::pixels::Pixel;
+    use crate::utility::count_colors;
 
     #[test]
     fn clean_canvas() {
         let canvas = Canvas::new(20, 20);
         let dimensions = canvas.dimensions();
-        assert_eq!(dimensions, Size { width: 20, height: 20 });
+        assert_eq!(
+            dimensions,
+            Size {
+                width: 20,
+                height: 20
+            }
+        );
 
         let counts = count_colors(&canvas);
         assert_eq!(counts.keys().len(), 1);
@@ -479,11 +491,16 @@ mod tests {
         let color = Pixel::random();
         let canvas = Canvas::new_with_background(20, 20, color.clone());
         let dimensions = canvas.dimensions();
-        assert_eq!(dimensions, Size { width: 20, height: 20 });
+        assert_eq!(
+            dimensions,
+            Size {
+                width: 20,
+                height: 20
+            }
+        );
 
         let counts = count_colors(&canvas);
         assert_eq!(counts.keys().len(), 1);
         assert_eq!(counts.get(&color), Some(&400));
     }
 }
-

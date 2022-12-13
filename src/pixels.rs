@@ -188,12 +188,24 @@ impl Pixel {
         }
     }
 
+    pub fn denormalize(red: f32, green: f32, blue: f32, alpha: f32) -> Pixel {
+        Self::from(
+            red * u8::max_value() as f32,
+            green * u8::max_value() as f32,
+            blue * u8::max_value() as f32,
+            alpha * u8::max_value() as f32,
+        )
+    }
+
     pub fn random() -> Pixel {
         let mut rng = rand::thread_rng();
         let random = Uniform::from(0..=255);
-        Pixel::new(random.sample(&mut rng).into(), random.sample(&mut rng).into(), random.sample(&mut rng).into(), 255)
-
-
+        Pixel::new(
+            random.sample(&mut rng).into(),
+            random.sample(&mut rng).into(),
+            random.sample(&mut rng).into(),
+            255,
+        )
     }
 
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
