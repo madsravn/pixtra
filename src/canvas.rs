@@ -493,6 +493,18 @@ impl Canvas {
 
 
     }*/
+
+    pub fn flip(&self) -> Canvas {
+        let pixels = self.pixels.chunks(self.width as usize).map(|x| x.iter().rev().collect()).collect();
+        Canvas {
+            pixels,
+            width: self.width,
+            height: self.height
+        }
+
+
+
+    }
 }
 
 #[cfg(test)]
