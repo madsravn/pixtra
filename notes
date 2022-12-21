@@ -5,6 +5,9 @@ Make documentation
 
 Make tests
 
+Implement KMeans clustering for finding dominant colors. Counting colors. Colors with more than X occurrences. Orphan pixels. Coordinates for certain colors. 
+This could be good in a front end.
+
 From: https://docs.rs/image/latest/image/imageops/index.html
 
 blur	Image sampling Performs a Gaussian blur on the supplied image. sigma is a measure of how much to blur by.
