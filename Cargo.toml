@@ -57,3 +57,7 @@ test = true
 [[example]]
 name = "pixel-builder"
 test = true
+
+[[example]]
+name = "flipping-and-flopping"
+test = true

@@ -495,15 +495,28 @@ impl Canvas {
     }*/
 
     pub fn flip(&self) -> Canvas {
-        let pixels = self.pixels.chunks(self.width as usize).map(|x| x.iter().rev().collect()).collect();
+        let mut reversed = Vec::with_capacity(self.width as usize * self.height as usize);
+        for pixels in self.pixels.chunks(self.width as usize) {
+            let rev: Vec<Pixel> = pixels.iter().rev().map(|x| x.to_owned()).collect();
+            reversed.extend(rev);
+        }
         Canvas {
-            pixels,
+            pixels: reversed,
             width: self.width,
             height: self.height
         }
+    }
 
+    pub fn flop(&self) -> Canvas {
+        let reversed = self.pixels.iter().rev().map(|x| x.to_owned()).collect();
 
-
+        let canvas = Canvas {
+            pixels: reversed,
+            width: self.width,
+            height: self.height,
+        };
+        let flipped = canvas.flip();
+        flipped
     }
 }
 
