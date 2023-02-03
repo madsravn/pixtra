@@ -33,6 +33,7 @@ path = "src/bin/main.rs"
 [dependencies]
 image = "0.24.3"
 rand = "0.8.5"
+num = "0.4.0"
 
 [[example]]
 name = "create-image"
@@ -60,4 +61,8 @@ test = true
 
 [[example]]
 name = "flipping-and-flopping"
+test = true
+
+[[example]]
+name = "draw-on-flamingo"
 test = true

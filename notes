@@ -1,3 +1,18 @@
+Something about adding, subtracting pixels should result in a pixelbuilder
+Same for multiplying and dividing constants. Can you do something like (5.0f * Pixel).build() ?
+
+Create a binary with clap. What should we be able to do? 
+
+Look up eframe and egui to see if you can utilize that to create an actual program using this lib. Should be its own project maybe? 
+
+FIX BLENDING OF COLORS: https://www.reddit.com/r/GraphicsProgramming/comments/z54jge/what_is_the_formula_for_drawing_rgba_on_rgba/
+"If it's not fully white (255), it gets blended with the thing behind it."
+Should you have different blend modes? Just start with one.
+Look at https://www.andersriggelsen.dk/glblendfunc.php for more functions and modes
+
+Create iterator returning coordinates and pixel 
+
+
 Figure out how to best make documentation
 
 https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/book/first-edition/documentation.html

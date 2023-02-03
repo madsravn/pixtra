@@ -117,47 +117,58 @@ pub fn error(c1: &Canvas, c2: &Canvas) -> u128 {
             let p1 = c1.get_pixel(x, y);
             let p2 = c2.get_pixel(x, y);
             let diff = p1.diff(&p2);
-            r += diff.r.pow(2) as u128;
-            g += diff.g.pow(2) as u128;
-            b += diff.b.pow(2) as u128;
-            a += diff.a.pow(2) as u128;
+            r += (diff.r as u128).pow(2) as u128;
+            g += (diff.g as u128).pow(2) as u128;
+            b += (diff.b as u128).pow(2) as u128;
+            a += (diff.a as u128).pow(2) as u128;
         }
     }
     (r + g + b + a) / ((4 * width * height) as u128)
 }
 
 // TODO: Should these exist here or only in the Canvas as private members?
-pub fn apply_alpha_color(color_one: f32, alpha_one: f32, color_two: f32, alpha_two: f32) -> f32 {
-    (1.0 - alpha_one) * alpha_two * color_two + alpha_one * color_one
+pub fn apply_alpha_color(
+    source_color: f32,
+    source_alpha: f32,
+    destination_color: f32,
+    _destination_alpha: f32,
+) -> f32 {
+    source_color * source_alpha + destination_color * (1.0f32 - source_alpha)
 }
 
-pub fn overlap_colors(current_pixel: &Pixel, new_pixel: &Pixel) -> Pixel {
-    // TODO !!! FIX !!!
-    if new_pixel.a == 255 {
-        return new_pixel.clone();
-    }
-    let pixel_one_normalized = new_pixel.normalize();
-    let pixel_two_normalized = current_pixel.normalize();
-    let new_a = (1.0 - pixel_one_normalized.3) * pixel_two_normalized.3 + pixel_one_normalized.3;
+//TODO: RENAME
+// We draw source onto destination
+pub fn overlap_colors(destination: &Pixel, source: &Pixel) -> Pixel {
+    /*if source.a == 255 {
+        return source.clone();
+    }*/
+    let source_normalized = source.normalize();
+    let destination_normalized = destination.normalize();
     let new_r = apply_alpha_color(
-        pixel_one_normalized.0,
-        pixel_one_normalized.3,
-        pixel_two_normalized.0,
-        pixel_two_normalized.3,
-    ) * new_a;
+        source_normalized.0,
+        source_normalized.3,
+        destination_normalized.0,
+        destination_normalized.3,
+    );
     let new_g = apply_alpha_color(
-        pixel_one_normalized.1,
-        pixel_one_normalized.3,
-        pixel_two_normalized.1,
-        pixel_two_normalized.3,
-    ) * new_a;
+        source_normalized.1,
+        source_normalized.3,
+        destination_normalized.1,
+        destination_normalized.3,
+    );
     let new_b = apply_alpha_color(
-        pixel_one_normalized.2,
-        pixel_one_normalized.3,
-        pixel_two_normalized.2,
-        pixel_two_normalized.3,
-    ) * new_a;
+        source_normalized.2,
+        source_normalized.3,
+        destination_normalized.2,
+        destination_normalized.3,
+    );
+    let new_a = apply_alpha_color(
+        source_normalized.3,
+        source_normalized.3,
+        destination_normalized.3,
+        destination_normalized.3,
+    );
 
     // TODO: This might be the culprit - should be "denormalized".
-    Pixel::from(new_r, new_g, new_b, new_a)
+    Pixel::denormalize(new_r, new_g, new_b, new_a)
 }

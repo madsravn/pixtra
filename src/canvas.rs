@@ -2,7 +2,6 @@ use crate::pixels::{ColorTrait, Colors, Pixel};
 use crate::utility::{clamp, overlap_colors, to_grey_lumiosity};
 use image::{GenericImageView, ImageFormat, RgbaImage};
 use std::cmp::{max, min};
-use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 
@@ -23,6 +22,12 @@ pub struct Canvas {
 pub struct Point {
     pub x: u32,
     pub y: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct PixelWithCoordinate {
+    pub coordinate: Point,
+    pub pixel: Pixel,
 }
 
 #[derive(Clone, Debug)]
@@ -314,6 +319,21 @@ impl Canvas {
         c
     }
 
+    pub fn draw_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
+        //TODO: Stop replicating this code
+        let width = min(canvas.width, self.width - x);
+        let height = min(canvas.height, self.height - y);
+        //TODO: Create iterator
+        for i in 0..width {
+            for j in 0..height {
+                let destination = self.get_pixel(x + i, y + j);
+                let source = canvas.get_pixel(i, j);
+                let new_color = overlap_colors(&destination, &source);
+                self.set_pixel_mut(x + i, y + j, &new_color);
+            }
+        }
+    }
+
     /// Inserts canvas `canvas` as a subimage at `(x, y)`
     pub fn set_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
         let width = min(canvas.width, self.width - x);
@@ -323,6 +343,20 @@ impl Canvas {
                 self.set_pixel_mut(x + i, y + j, &canvas.get_pixel(i, j));
             }
         }
+    }
+
+    pub fn draw_subimage(mut self, x: u32, y: u32, canvas: &Canvas) -> Canvas {
+        let width = min(canvas.width, self.width - x);
+        let height = min(canvas.height, self.height - y);
+        for i in 0..width {
+            for j in 0..height {
+                let destination = self.get_pixel(x + i, y + j);
+                let source = canvas.get_pixel(i, j);
+                let new_color = overlap_colors(&destination, &source);
+                self.set_pixel_mut(x + i, y + j, &new_color);
+            }
+        }
+        self
     }
 
     /// Inserts canvas `canvas` as a subimage at `(x, y)`
@@ -379,6 +413,7 @@ impl Canvas {
             for i in x..min(x + w, self.width) {
                 for j in y..min(y + h, self.height) {
                     let current_color = &self.get_pixel(i, j);
+                    //TODO: RENAME
                     let new_color = overlap_colors(&current_color, &color);
                     self.set_pixel_mut(i, j, &new_color);
                 }
@@ -397,47 +432,6 @@ impl Canvas {
                     self.set_pixel_mut(i, j, &new_color);
                 }
             }
-        }
-        self
-    }
-
-    fn within_range(&self, x: i64, y: i64, pos: &(i64, i64)) -> bool {
-        let result = pos.0 + x > -1
-            && pos.0 + x < self.width.into()
-            && pos.1 + y > -1
-            && pos.1 + y < self.height.into();
-
-        result
-    }
-
-    // TODO: This can be much, much prettier. Rethink
-    pub fn fill_orig(mut self, x: u32, y: u32, color: &Pixel) -> Canvas {
-        let mut visit_next: Vec<(i64, i64)> = vec![(x.into(), y.into())];
-        let mut visited: HashMap<(i64, i64), i64> = HashMap::new();
-        let mut change_color: Vec<(u32, u32)> = vec![(x, y)];
-        let checks: Vec<(i64, i64)> = vec![(-1, 0), (1, 0), (0, -1), (0, 1)];
-        let find_color = self.get_pixel(x, y);
-
-        // TODO: Can this be done with a iter_mut() or something?
-        while let Some(pos) = visit_next.pop() {
-            // TODO: This can be moved into the block
-            visited.insert(pos, 1);
-            for position in checks
-                .iter()
-                .filter(|c| self.within_range(pos.0, pos.1, c))
-                .map(|c| (pos.0 as i64 + c.0, pos.1 as i64 + c.1))
-                .map(|p| (self.get_pixel(p.0 as u32, p.1 as u32), p))
-                .filter(|(check_pixel, _p)| *check_pixel == find_color)
-                .map(|(_, p)| p)
-                .filter(|p| !visited.contains_key(p))
-            {
-                change_color.push((position.0 as u32, position.1 as u32));
-                visit_next.push(position);
-            }
-        }
-
-        for pos in change_color.iter() {
-            self.set_pixel_mut(pos.0, pos.1, color);
         }
         self
     }
@@ -487,6 +481,26 @@ impl Canvas {
         canvas
     }
 
+    pub fn find_with_predicate(
+        &self,
+        predicate: fn(&Pixel, u32, u32) -> bool,
+    ) -> Vec<PixelWithCoordinate> {
+        let mut vec = Vec::new();
+        //TODO: Create iterator
+        for i in 0..self.width {
+            for j in 0..self.height {
+                if predicate(&self.get_pixel(i, j), i, j) {
+                    let p = PixelWithCoordinate {
+                        coordinate: Point { x: i, y: j },
+                        pixel: self.get_pixel(i, j).clone(),
+                    };
+                    vec.push(p);
+                }
+            }
+        }
+        vec
+    }
+
     // TODO: What is the opionated solution to this that fits into tiles?
     // If a user calls this to get something that exceeds width and height?
     /*pub fn get_subimage(&self, x: u32, y: u32, w: u32, h: u32) -> Canvas {
@@ -494,6 +508,7 @@ impl Canvas {
 
     }*/
 
+    /// Flips the image on the vertical axis
     pub fn flip(&self) -> Canvas {
         let mut reversed = Vec::with_capacity(self.width as usize * self.height as usize);
         for pixels in self.pixels.chunks(self.width as usize) {
@@ -503,10 +518,11 @@ impl Canvas {
         Canvas {
             pixels: reversed,
             width: self.width,
-            height: self.height
+            height: self.height,
         }
     }
 
+    /// Flips the image on the horizontal axis
     pub fn flop(&self) -> Canvas {
         let reversed = self.pixels.iter().rev().map(|x| x.to_owned()).collect();
 

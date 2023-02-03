@@ -1,7 +1,7 @@
 use crate::utility::clamp;
 use rand::distributions::{Distribution, Uniform};
 use std::fmt;
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Sub};
 
 /// Example colors
 pub trait ColorTrait {
@@ -10,6 +10,7 @@ pub trait ColorTrait {
     const RED: Pixel;
     const GREEN: Pixel;
     const BLUE: Pixel;
+    const ZERO: Pixel;
 }
 
 /// Example colors
@@ -46,10 +47,15 @@ impl ColorTrait for Colors {
         b: 255,
         a: 255,
     };
+
+    const ZERO: Pixel = Pixel {
+        r: 0,
+        g: 0,
+        b: 0,
+        a: 0,
+    };
 }
 
-//TODO: Should this have a ::new? Can we hide the struct for construction but allow reading?
-/// The pixel struct holds the red, green, blue and alpha channel in u8's.
 #[derive(Hash, Clone, Debug)]
 pub struct Pixel {
     pub r: u8,
@@ -62,6 +68,8 @@ pub struct Pixel {
 /// The PixelBuilder is a construct which allows for values bigger than u8 and smaller than 0. This
 /// is used if you want to add a lot of values together and divide them later or want to use both
 /// positive and negative values.
+
+#[derive(Clone, Debug)]
 pub struct PixelBuilder {
     r: f32,
     g: f32,
@@ -91,10 +99,12 @@ impl PixelBuilder {
         }
     }
 
+    /// Builds a `Pixel` from this `PixelBuilder`
     pub fn build(&self) -> Pixel {
         Pixel::from(self.r, self.g, self.b, self.a)
     }
 
+    /// Resets all channels to `0`
     pub fn reset(&self) -> PixelBuilder {
         PixelBuilder::new()
     }
@@ -113,6 +123,7 @@ impl fmt::Display for Pixel {
     }
 }
 
+//TODO: Should I move all these things to a different file? pixel_traits?
 impl Add for PixelBuilder {
     type Output = PixelBuilder;
 
@@ -139,15 +150,43 @@ impl Add<Pixel> for PixelBuilder {
     }
 }
 
+//TODO: Is this correct? Every time we do this, we should end up with a `PixelBuilder`
 impl Add for Pixel {
-    type Output = Pixel;
+    type Output = PixelBuilder;
 
-    fn add(self, other: Pixel) -> Pixel {
-        Pixel {
-            r: clamp(0u16, u8::max_value() as u16, self.r as u16 + other.r as u16) as u8,
-            g: clamp(0u16, u8::max_value() as u16, self.g as u16 + other.g as u16) as u8,
-            b: clamp(0u16, u8::max_value() as u16, self.b as u16 + other.b as u16) as u8,
-            a: clamp(0u16, u8::max_value() as u16, self.a as u16 + other.a as u16) as u8,
+    fn add(self, other: Pixel) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r as f32 + other.r as f32,
+            g: self.g as f32 + other.g as f32,
+            b: self.b as f32 + other.b as f32,
+            a: self.a as f32 + other.a as f32,
+        }
+    }
+}
+
+//TODO: This needs to be for all floats. And then PixelBuilder needs to support that.
+impl Mul<f32> for Pixel {
+    type Output = PixelBuilder;
+
+    fn mul(self, other: f32) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r as f32 * other,
+            g: self.g as f32 * other,
+            b: self.b as f32 * other,
+            a: self.a as f32 * other,
+        }
+    }
+}
+
+impl Div<f32> for Pixel {
+    type Output = PixelBuilder;
+
+    fn div(self, other: f32) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r as f32 / other,
+            g: self.g as f32 / other,
+            b: self.b as f32 / other,
+            a: self.a as f32 / other,
         }
     }
 }
@@ -206,6 +245,10 @@ impl Pixel {
             random.sample(&mut rng).into(),
             255,
         )
+    }
+
+    pub fn is_zero(&self) -> bool {
+        (self.r as u32 + self.g as u32 + self.b as u32) as u32 == 0
     }
 
     pub fn multiply(&self, x: f32, y: f32, z: f32) -> Pixel {
@@ -288,68 +331,46 @@ impl Pixel {
 mod tests {
     use super::*;
 
-    // TODO: This is ugly. Do we need to implement for &Pixel and &PixelBuilder as well?
+    #[test]
+    fn test_add() {
+        let pixel = Pixel::new(1, 2, 3, 4);
+        let pixel_builder = pixel.clone() + pixel.clone();
+        assert_eq!(pixel_builder.clone().build(), Pixel::new(2, 4, 6, 8));
+        let pixel_builder_double = pixel_builder.clone() + pixel_builder.clone();
+        assert_eq!(pixel_builder_double.build(), Pixel::new(4, 8, 12, 16));
+        let test_one = pixel_builder_double.clone() + pixel.clone();
+        assert_eq!(test_one.build(), Pixel::new(5, 10, 15, 20));
+        let test_two = pixel.clone() + pixel_builder.clone();
+        assert_eq!(test_two.build(), Pixel::new(3, 6, 9, 12));
+    }
+
     #[test]
     fn pixel_builder_simple() {
-        let builder = Pixel::builder();
-        let pixel = Pixel {
-            r: 1,
-            g: 2,
-            b: 3,
-            a: 4,
-        };
-        let resulting_pixel = (builder + pixel.clone() + pixel.clone() + pixel.clone()).build();
-        assert_eq!(
-            resulting_pixel,
-            Pixel {
-                r: 3,
-                g: 6,
-                b: 9,
-                a: 12
-            }
-        );
+        let pixel = Pixel::new(1, 2, 3, 4);
+        let resulting_pixel = (pixel.clone() + pixel.clone() + pixel.clone()).build();
+        assert_eq!(resulting_pixel, Pixel::new(3, 6, 9, 12));
     }
 
     #[test]
     fn pixel_show_display() {
-        let pixel = Pixel {
-            r: 140,
-            g: 200,
-            b: 100,
-            a: 240,
-        };
+        let pixel = Pixel::new(140, 200, 100, 240);
         let disp = format!("{}", pixel);
         assert_eq!("(140, 200, 100, 240)", disp);
     }
 
     #[test]
     fn pixel_it_works() {
-        let pixel = Pixel {
-            r: 255,
-            g: 255,
-            b: 255,
-            a: 0,
-        };
+        let pixel = Pixel::new(55, 25, 255, 0);
         assert_eq!(pixel.a, 0);
-        assert_eq!(pixel.r, 255);
-        assert_eq!(pixel.g, 255);
+        assert_eq!(pixel.r, 55);
+        assert_eq!(pixel.g, 25);
         assert_eq!(pixel.b, 255);
     }
 
     #[test]
     fn pixel_equality_works() {
-        let pixel_one = Pixel {
-            r: 155,
-            g: 172,
-            b: 3,
-            a: 255,
-        };
-        let pixel_two = Pixel {
-            r: 155,
-            g: 172,
-            b: 3,
-            a: 255,
-        };
+        let pixel_one = Pixel::new(155, 172, 3, 255);
+        let pixel_two = Pixel::new(155, 172, 3, 255);
         assert_eq!(pixel_one.r, pixel_two.r);
         assert_eq!(pixel_one.g, pixel_two.g);
         assert_eq!(pixel_one.b, pixel_two.b);
@@ -391,127 +412,37 @@ mod tests {
 
     #[test]
     fn pixel_mut_setters() {
-        let mut pixel = Pixel {
-            r: 3,
-            g: 3,
-            b: 3,
-            a: 3,
-        };
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 3,
-                g: 3,
-                b: 3,
-                a: 3
-            }
-        );
+        let mut pixel = Pixel::new(3, 3, 3, 3);
+        assert_eq!(&pixel, &Pixel::new(3, 3, 3, 3));
 
         pixel.set_red_mut(4);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 3,
-                b: 3,
-                a: 3
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 3, 3, 3));
 
         pixel.set_green_mut(5);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 5,
-                b: 3,
-                a: 3
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 5, 3, 3));
 
         pixel.set_blue_mut(6);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 5,
-                b: 6,
-                a: 3
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 5, 6, 3));
 
         pixel.set_alpha_mut(7);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 5,
-                b: 6,
-                a: 7
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 5, 6, 7));
     }
 
     #[test]
     fn pixel_setters() {
-        let pixel = Pixel {
-            r: 3,
-            g: 3,
-            b: 3,
-            a: 3,
-        };
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 3,
-                g: 3,
-                b: 3,
-                a: 3
-            }
-        );
+        let pixel = Pixel::new(3, 3, 3, 3);
+        assert_eq!(&pixel, &Pixel::new(3, 3, 3, 3));
 
         let pixel = pixel.set_red(4);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 3,
-                b: 3,
-                a: 3
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 3, 3, 3));
 
         let pixel = pixel.set_green(5);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 5,
-                b: 3,
-                a: 3
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 5, 3, 3));
 
         let pixel = pixel.set_blue(6);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 5,
-                b: 6,
-                a: 3
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 5, 6, 3));
 
         let pixel = pixel.set_alpha(7);
-        assert_eq!(
-            &pixel,
-            &Pixel {
-                r: 4,
-                g: 5,
-                b: 6,
-                a: 7
-            }
-        );
+        assert_eq!(&pixel, &Pixel::new(4, 5, 6, 7));
     }
 }
