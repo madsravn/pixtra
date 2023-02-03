@@ -1,6 +1,6 @@
 [package]
 name = "pixtra"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Mads Ravn <madsravn@gmail.com>"]
 license = "GPL-3.0"
