@@ -113,7 +113,7 @@ fn map_error(error: &image::ImageError) -> ImageError {
 }
 
 impl Canvas {
-    /// Create a new `Canvas` of size `width` and `height`
+    /// Creates a new `Canvas` of size `width` and `height`
     ///
     /// # Examples
     ///
@@ -317,6 +317,28 @@ impl Canvas {
             }
         }
         c
+    }
+    
+    fn index_to_coordinate(&self, index: u32) -> (u32, u32) {
+        (index % self.width, index / self.width)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item=Pixel> + '_ {
+        self.pixels.iter().map(|x| x.clone())
+    }
+
+    pub fn iter_with_coordinates(&self) -> impl Iterator<Item=PixelWithCoordinate> + '_ {
+        let range = 0..self.pixels.len();
+        let range = range.map(|x| self.index_to_coordinate(x as u32));
+        self.pixels.iter().zip(range).map(|(pixel, coordinate)| PixelWithCoordinate { coordinate: Point {x: coordinate.0, y: coordinate.1}, pixel: pixel.clone()})
+    }
+
+
+    fn subimage_iterator(&self, x: u32, y: u32, canvas: &Canvas) -> impl Iterator<Item=PixelWithCoordinate> + '_ {
+        let range = 0..self.pixels.len();
+        let range = range.map(|x| self.index_to_coordinate(x as u32));
+        // TODO: Missing filter!
+        self.pixels.iter().zip(range).map(|(x, y)| PixelWithCoordinate { coordinate: Point { x: y.0, y: y.1}, pixel: x.clone() })
     }
 
     pub fn draw_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
