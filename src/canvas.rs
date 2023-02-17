@@ -174,6 +174,7 @@ impl Canvas {
 
     /// Saves the canvas as an image at the path given by `filename`
     pub fn save(&self, filename: &Path) -> Result<(), ImageError> {
+        println!("Saving to: {}", filename.display());
         let img = RgbaImage::from_vec(
             self.width,
             self.height,
@@ -305,6 +306,7 @@ impl Canvas {
         }
     }
 
+    //TODO: How can we use a subimage_iterator here?
     /// Returns a canvas that is subimage starting at `(x, y)` with size `width x height`.
     pub fn get_subimage(&self, x: u32, y: u32, width: u32, height: u32) -> Canvas {
         let width = min(width, self.width - x);
@@ -318,77 +320,115 @@ impl Canvas {
         }
         c
     }
-    
+
     fn index_to_coordinate(&self, index: u32) -> (u32, u32) {
         (index % self.width, index / self.width)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=Pixel> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = Pixel> + '_ {
         self.pixels.iter().map(|x| x.clone())
     }
 
-    pub fn iter_with_coordinates(&self) -> impl Iterator<Item=PixelWithCoordinate> + '_ {
+    pub fn iter_with_coordinates(&self) -> impl Iterator<Item = PixelWithCoordinate> + '_ {
         let range = 0..self.pixels.len();
         let range = range.map(|x| self.index_to_coordinate(x as u32));
-        self.pixels.iter().zip(range).map(|(pixel, coordinate)| PixelWithCoordinate { coordinate: Point {x: coordinate.0, y: coordinate.1}, pixel: pixel.clone()})
+        self.pixels
+            .iter()
+            .zip(range)
+            .map(|(pixel, coordinate)| PixelWithCoordinate {
+                coordinate: Point {
+                    x: coordinate.0,
+                    y: coordinate.1,
+                },
+                pixel: pixel.clone(),
+            })
     }
 
+    fn subimage_iterator<'a, 'b>(
+        &'a self,
+        x: u32,
+        y: u32,
+        canvas: &'b Canvas,
+    ) -> impl Iterator<Item = PixelWithCoordinate> + '_
+    where
+        'b: 'a,
+    {
+        let width = min(canvas.width, self.width - x);
+        let height = min(canvas.height, self.height - y);
 
-    fn subimage_iterator(&self, x: u32, y: u32, canvas: &Canvas) -> impl Iterator<Item=PixelWithCoordinate> + '_ {
-        let range = 0..self.pixels.len();
-        let range = range.map(|x| self.index_to_coordinate(x as u32));
-        // TODO: Missing filter!
-        self.pixels.iter().zip(range).map(|(x, y)| PixelWithCoordinate { coordinate: Point { x: y.0, y: y.1}, pixel: x.clone() })
+        canvas
+            .iter_with_coordinates()
+            .filter(move |p| p.coordinate.x < width && p.coordinate.y < height)
+            .map(move |p| PixelWithCoordinate {
+                coordinate: Point {
+                    x: p.coordinate.x + x,
+                    y: p.coordinate.y + y,
+                },
+                pixel: p.pixel.clone(),
+            })
     }
 
     pub fn draw_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
-        //TODO: Stop replicating this code
-        let width = min(canvas.width, self.width - x);
-        let height = min(canvas.height, self.height - y);
-        //TODO: Create iterator
-        for i in 0..width {
-            for j in 0..height {
-                let destination = self.get_pixel(x + i, y + j);
-                let source = canvas.get_pixel(i, j);
-                let new_color = overlap_colors(&destination, &source);
-                self.set_pixel_mut(x + i, y + j, &new_color);
-            }
+        // This is ugly. Fix it
+        let binding = self.clone();
+        let iter = binding.subimage_iterator(x, y, canvas);
+        for pixelwithcoordinate in iter {
+            let destination = self.get_pixel(
+                pixelwithcoordinate.coordinate.x,
+                pixelwithcoordinate.coordinate.y,
+            );
+            let source = pixelwithcoordinate.pixel;
+            let new_color = overlap_colors(&destination, &source);
+            self.set_pixel_mut(
+                pixelwithcoordinate.coordinate.x,
+                pixelwithcoordinate.coordinate.y,
+                &new_color,
+            );
         }
     }
 
     /// Inserts canvas `canvas` as a subimage at `(x, y)`
     pub fn set_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
-        let width = min(canvas.width, self.width - x);
-        let height = min(canvas.height, self.height - y);
-        for i in 0..width {
-            for j in 0..height {
-                self.set_pixel_mut(x + i, y + j, &canvas.get_pixel(i, j));
-            }
+        let binding = self.clone();
+        let iter = binding.subimage_iterator(x, y, canvas);
+        for pixelwithcoordinate in iter {
+            self.set_pixel_mut(
+                pixelwithcoordinate.coordinate.x,
+                pixelwithcoordinate.coordinate.y,
+                &pixelwithcoordinate.pixel,
+            );
         }
     }
 
     pub fn draw_subimage(mut self, x: u32, y: u32, canvas: &Canvas) -> Canvas {
-        let width = min(canvas.width, self.width - x);
-        let height = min(canvas.height, self.height - y);
-        for i in 0..width {
-            for j in 0..height {
-                let destination = self.get_pixel(x + i, y + j);
-                let source = canvas.get_pixel(i, j);
-                let new_color = overlap_colors(&destination, &source);
-                self.set_pixel_mut(x + i, y + j, &new_color);
-            }
+        let binding = self.clone();
+        let iter = binding.subimage_iterator(x, y, canvas);
+        for pixelwithcoordinate in iter {
+            let destination = self.get_pixel(
+                pixelwithcoordinate.coordinate.x,
+                pixelwithcoordinate.coordinate.y,
+            );
+            let source = pixelwithcoordinate.pixel;
+            let new_color = overlap_colors(&destination, &source);
+            self.set_pixel_mut(
+                pixelwithcoordinate.coordinate.x,
+                pixelwithcoordinate.coordinate.y,
+                &new_color,
+            );
         }
         self
     }
 
     /// Inserts canvas `canvas` as a subimage at `(x, y)`
-    pub fn set_subimage(mut self, x: u32, y: u32, c: &Canvas) -> Canvas {
-        let width = min(c.width, self.width - x);
-        let height = min(c.height, self.height - y);
-        for i in 0..width {
-            for j in 0..height {
-                self.set_pixel_mut(x + i, y + j, &c.get_pixel(i, j));
-            }
+    pub fn set_subimage(mut self, x: u32, y: u32, canvas: &Canvas) -> Canvas {
+        let binding = self.clone();
+        let iter = binding.subimage_iterator(x, y, canvas);
+        for pixelwithcoordinate in iter {
+            self.set_pixel_mut(
+                pixelwithcoordinate.coordinate.x,
+                pixelwithcoordinate.coordinate.y,
+                &pixelwithcoordinate.pixel,
+            );
         }
         self
     }
@@ -407,7 +447,7 @@ impl Canvas {
         self
     }
 
-    /// Sets pixel at position `(x, y)` to `pixel`
+    /// Mutable sets pixel at position `(x, y)` to `pixel`
     pub fn set_pixel_mut(&mut self, x: u32, y: u32, pixel: &Pixel) {
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
     }
@@ -431,30 +471,16 @@ impl Canvas {
     /// Draws a square on the canvas. Draws at position `(x, y)` with size `width x height`. Color
     /// is `color`.
     pub fn draw_square_mut(&mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) {
-        if x < self.width && y < self.height {
-            for i in x..min(x + w, self.width) {
-                for j in y..min(y + h, self.height) {
-                    let current_color = &self.get_pixel(i, j);
-                    //TODO: RENAME
-                    let new_color = overlap_colors(&current_color, &color);
-                    self.set_pixel_mut(i, j, &new_color);
-                }
-            }
-        }
+        let canvas = Canvas::new_with_background(w, h, color.clone());
+        self.draw_subimage_mut(x, y, &canvas);
     }
 
     /// Draws a square on the canvas. Draws at position `(x, y)` with size `width x height`. Color
     /// is `color`.
     pub fn draw_square(mut self, x: u32, y: u32, w: u32, h: u32, color: &Pixel) -> Canvas {
-        if x < self.width && y < self.height {
-            for i in x..min(x + w, self.width) {
-                for j in y..min(y + h, self.height) {
-                    let current_color = &self.get_pixel(i, j);
-                    let new_color = overlap_colors(&current_color, &color);
-                    self.set_pixel_mut(i, j, &new_color);
-                }
-            }
-        }
+        let canvas = Canvas::new_with_background(w, h, color.clone());
+        self.draw_subimage_mut(x, y, &canvas);
+
         self
     }
 
@@ -564,6 +590,20 @@ mod tests {
     use crate::pixels::Pixel;
     use crate::utility::count_colors;
 
+    // Stupid function for comparing new iterator
+    fn draw_subimage_mut_old(draw_on: &mut Canvas, x: u32, y: u32, canvas: &Canvas) {
+        let width = min(canvas.width, draw_on.width - x);
+        let height = min(canvas.height, draw_on.height - y);
+        for i in 0..width {
+            for j in 0..height {
+                let destination = draw_on.get_pixel(x + i, y + j);
+                let source = canvas.get_pixel(i, j);
+                let new_color = overlap_colors(&destination, &source);
+                draw_on.set_pixel_mut(x + i, y + j, &new_color);
+            }
+        }
+    }
+
     #[test]
     fn clean_canvas() {
         let canvas = Canvas::new(20, 20);
@@ -579,6 +619,46 @@ mod tests {
         let counts = count_colors(&canvas);
         assert_eq!(counts.keys().len(), 1);
         assert_eq!(counts.get(&Pixel::new(255, 255, 255, 255)), Some(&400));
+    }
+
+    #[test]
+    fn testing_new_iterators() {
+        let canvas = Canvas::new(20, 20);
+        let filled_canvas = canvas.fill(0, 0, &Pixel::new(255, 255, 0, 255));
+        let mut canvas_one = Canvas::new(40, 40);
+        let mut canvas_two = Canvas::new(40, 40);
+        canvas_one.draw_subimage_mut(10, 10, &filled_canvas);
+        draw_subimage_mut_old(&mut canvas_two, 10, 10, &filled_canvas);
+
+        assert_eq!(canvas_one, canvas_two);
+    }
+
+    #[test]
+    fn testing_new_iterators_out_of_border_y() {
+        let position = Point { x: 10, y: 30 };
+        let size = 40;
+        let canvas = Canvas::new(20, 20);
+        let filled_canvas = canvas.fill(0, 0, &Pixel::new(255, 255, 0, 255));
+        let mut canvas_one = Canvas::new(size, size);
+        let mut canvas_two = Canvas::new(size, size);
+        canvas_one.draw_subimage_mut(position.x, position.y, &filled_canvas);
+        draw_subimage_mut_old(&mut canvas_two, position.x, position.y, &filled_canvas);
+
+        assert_eq!(canvas_one, canvas_two);
+    }
+
+    #[test]
+    fn testing_new_iterators_out_of_border_x() {
+        let position = Point { x: 30, y: 10 };
+        let size = 40;
+        let canvas = Canvas::new(20, 20);
+        let filled_canvas = canvas.fill(0, 0, &Pixel::new(255, 255, 0, 255));
+        let mut canvas_one = Canvas::new(size, size);
+        let mut canvas_two = Canvas::new(size, size);
+        canvas_one.draw_subimage_mut(position.x, position.y, &filled_canvas);
+        draw_subimage_mut_old(&mut canvas_two, position.x, position.y, &filled_canvas);
+
+        assert_eq!(canvas_one, canvas_two);
     }
 
     #[test]
