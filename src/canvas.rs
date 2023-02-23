@@ -75,7 +75,6 @@ impl PartialEq for Canvas {
 }
 impl Eq for Canvas {}
 
-// TODO!
 impl fmt::Display for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -242,6 +241,7 @@ impl Canvas {
             .len() as u32
     }
 
+    /// Returns the indeces of all pixels that are equal to `pixel`.
     fn find_positions_of_pixels(&self, pixel: &Pixel) -> Vec<usize> {
         self.pixels
             .iter()
@@ -251,6 +251,7 @@ impl Canvas {
             .collect()
     }
 
+    /// Returns the indeces of all pixels that are within a given `distance` to `pixel`.
     fn find_positions_of_pixels_with_distance(&self, pixel: &Pixel, distance: f32) -> Vec<usize> {
         self.pixels
             .iter()
@@ -368,6 +369,7 @@ impl Canvas {
             })
     }
 
+    /// Draws canvas `canvas` as a subimage at `(x, y)`
     pub fn draw_subimage_mut(&mut self, x: u32, y: u32, canvas: &Canvas) {
         // This is ugly. Fix it
         let binding = self.clone();
@@ -400,6 +402,7 @@ impl Canvas {
         }
     }
 
+    /// Draws canvas `canvas` as a subimage at `(x, y)`
     pub fn draw_subimage(mut self, x: u32, y: u32, canvas: &Canvas) -> Canvas {
         let binding = self.clone();
         let iter = binding.subimage_iterator(x, y, canvas);
@@ -529,10 +532,18 @@ impl Canvas {
         canvas
     }
 
+    /// Finds all pixels where predicate `predicate` holds
     pub fn find_with_predicate(
         &self,
         predicate: fn(&Pixel, u32, u32) -> bool,
     ) -> Vec<PixelWithCoordinate> {
+
+
+        let result = self.iter_with_coordinates().filter(|x| predicate(&x.pixel, x.coordinate.x, x.coordinate.y)).collect();
+
+        result
+
+        /*
         let mut vec = Vec::new();
         //TODO: Create iterator
         for i in 0..self.width {
@@ -547,6 +558,7 @@ impl Canvas {
             }
         }
         vec
+        */
     }
 
     // TODO: What is the opionated solution to this that fits into tiles?
@@ -660,6 +672,34 @@ mod tests {
 
         assert_eq!(canvas_one, canvas_two);
     }
+
+
+    #[test]
+    fn test_find_with_predicate() {
+        let position = Point { x: 30, y: 10 };
+        let size = 40;
+        let canvas = Canvas::new(20, 20);
+        let filled_canvas = canvas.fill(0, 0, &Pixel::new(255, 255, 0, 255));
+        let mut canvas_one = Canvas::new(size, size);
+        canvas_one.draw_subimage_mut(position.x, position.y, &filled_canvas);
+        let predicate = |pixel: &Pixel, x: u32, y: u32| -> bool {
+            if pixel == &Pixel::new(255, 255, 0, 255) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        let found = canvas.find_with_predicate(predicate);
+        // We filled the canvas with 20 * 20 yellow pixels
+        assert_eq!(found.len(), 20 * 20);
+        found.iter().all()
+
+        }
+
+
+
+    }
+
 
     #[test]
     fn clean_canvas_with_background() {
