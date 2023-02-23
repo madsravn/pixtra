@@ -75,7 +75,6 @@ impl PartialEq for Canvas {
 }
 impl Eq for Canvas {}
 
-// TODO!
 impl fmt::Display for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -321,6 +320,12 @@ impl Canvas {
         c
     }
 
+    pub fn vertical_chunks(&self, size_of_chunk: u32) -> Vec<Canvas> {
+        let pixels: Vec<Canvas> = self.pixels.chunks((size_of_chunk * self.width) as usize).map(|x| Canvas::new_with_data(self.width, size_of_chunk, x.to_vec())).collect();
+
+        pixels
+    }
+
     fn index_to_coordinate(&self, index: u32) -> (u32, u32) {
         (index % self.width, index / self.width)
     }
@@ -519,6 +524,7 @@ impl Canvas {
     /// Applies filter to entire canvas. `filter` is a function that takes a reference to the
     /// canvas and position `(x, y)` and returns the color which should be set at that position.
     pub fn filter(&self, filter: fn(&Canvas, u32, u32) -> Pixel) -> Canvas {
+        // TODO: Do this with an iterator instead
         let mut canvas = Canvas::new(self.width, self.height);
         for x in 0..self.width {
             for y in 0..self.height {

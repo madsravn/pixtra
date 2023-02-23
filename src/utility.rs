@@ -169,6 +169,5 @@ pub fn overlap_colors(destination: &Pixel, source: &Pixel) -> Pixel {
         destination_normalized.3,
     );
 
-    // TODO: This might be the culprit - should be "denormalized".
     Pixel::denormalize(new_r, new_g, new_b, new_a)
 }

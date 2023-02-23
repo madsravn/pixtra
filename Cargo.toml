@@ -66,3 +66,7 @@ test = true
 [[example]]
 name = "draw-on-flamingo"
 test = true
+
+[[example]]
+name = "vertical-and-horizontal-chunks"
+test = true
