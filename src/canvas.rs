@@ -322,6 +322,18 @@ impl Canvas {
         c
     }
 
+    pub fn rotate90(mut self) -> Canvas {
+        for x in 0..self.width/2 {
+            for y in 0..self.height/2 {
+
+
+            }
+        }
+
+
+        self
+    }
+
     pub fn vertical_chunks(&self, size_of_chunk: u32) -> Vec<Canvas> {
         let pixels: Vec<Canvas> = self.pixels.chunks((size_of_chunk * self.width) as usize).map(|x| Canvas::new_with_data(self.width, size_of_chunk, x.to_vec())).collect();
 
@@ -683,27 +695,24 @@ mod tests {
 
     #[test]
     fn test_find_with_predicate() {
-        let position = Point { x: 30, y: 10 };
+        let position = Point { x: 10, y: 10 };
         let size = 40;
         let canvas = Canvas::new(20, 20);
         let filled_canvas = canvas.fill(0, 0, &Pixel::new(255, 255, 0, 255));
         let mut canvas_one = Canvas::new(size, size);
         canvas_one.draw_subimage_mut(position.x, position.y, &filled_canvas);
-        let predicate = |pixel: &Pixel, x: u32, y: u32| -> bool {
+        let predicate = |pixel: &Pixel, _: u32, _: u32| -> bool {
             if pixel == &Pixel::new(255, 255, 0, 255) {
                 return true;
             } else {
                 return false;
             }
         };
-        let found = canvas.find_with_predicate(predicate);
+        let found = canvas_one.find_with_predicate(predicate);
         // We filled the canvas with 20 * 20 yellow pixels
         assert_eq!(found.len(), 20 * 20);
-        found.iter().all()
-
-        }
-
-
+        let correct_color = found.iter().all(|pixelwithcoordinate| pixelwithcoordinate.pixel == Pixel::new(255, 255, 0, 255));
+        assert_eq!(correct_color, true);
 
     }
 
