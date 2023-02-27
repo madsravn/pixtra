@@ -70,3 +70,7 @@ test = true
 [[example]]
 name = "vertical-and-horizontal-chunks"
 test = true
+
+[[example]]
+name = "rotations"
+test = true

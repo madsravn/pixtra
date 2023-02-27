@@ -323,14 +323,17 @@ impl Canvas {
     }
 
     pub fn rotate90(mut self) -> Canvas {
-        for x in 0..self.width/2 {
-            for y in 0..self.height/2 {
-
-
+        let dimensions = self.dimensions();
+        let innerdim = Size { width: dimensions.width - 1, height: dimensions.height - 1};
+        for x in 0..dimensions.width/2 {
+            for y in 0..dimensions.height/2 {
+                let cloned = self.get_pixel(x, y);
+                self.set_pixel_mut(x, y, &self.get_pixel(x, innerdim.height - y));
+                self.set_pixel_mut(x, innerdim.height - y, &self.get_pixel(innerdim.width - x, innerdim.height - y));
+                self.set_pixel_mut(innerdim.width - x, innerdim.height - y, &self.get_pixel(innerdim.width - x, y));
+                self.set_pixel_mut(innerdim.width - x, y, &cloned);
             }
         }
-
-
         self
     }
 
