@@ -322,19 +322,53 @@ impl Canvas {
         c
     }
 
+    // TODO: What to do when the canvas isn't squared? 
+    // Make it square, transform, grab subimage.
+    pub fn rotate90_mut(&mut self) {
+        let dimensions = self.dimensions();
+        let innerdim = Size { width: dimensions.width - 1, height: dimensions.height - 1};
+        for x in 0..dimensions.width/2 {
+            for y in 0..dimensions.height/2 {
+                let cloned = self.get_pixel(x, y);
+                self.set_pixel_mut(x, y, &self.get_pixel(y, innerdim.height - x));
+                self.set_pixel_mut(y, innerdim.height - x, &self.get_pixel(innerdim.width - x, innerdim.height - y));
+                self.set_pixel_mut(innerdim.width - x, innerdim.height - y, &self.get_pixel(innerdim.width - y, x));
+                self.set_pixel_mut(innerdim.width - y, x, &cloned);
+            }
+        }
+    }
+
+    pub fn rotate180_mut(&mut self) {
+        self.rotate90_mut();
+        self.rotate90_mut();
+    }
+
+    pub fn rotate270_mut(&mut self) {
+        self.rotate180_mut();
+        self.rotate90_mut();
+    }
+
     pub fn rotate90(mut self) -> Canvas {
         let dimensions = self.dimensions();
         let innerdim = Size { width: dimensions.width - 1, height: dimensions.height - 1};
         for x in 0..dimensions.width/2 {
             for y in 0..dimensions.height/2 {
                 let cloned = self.get_pixel(x, y);
-                self.set_pixel_mut(x, y, &self.get_pixel(x, innerdim.height - y));
-                self.set_pixel_mut(x, innerdim.height - y, &self.get_pixel(innerdim.width - x, innerdim.height - y));
-                self.set_pixel_mut(innerdim.width - x, innerdim.height - y, &self.get_pixel(innerdim.width - x, y));
-                self.set_pixel_mut(innerdim.width - x, y, &cloned);
+                self.set_pixel_mut(x, y, &self.get_pixel(y, innerdim.height - x));
+                self.set_pixel_mut(y, innerdim.height - x, &self.get_pixel(innerdim.width - x, innerdim.height - y));
+                self.set_pixel_mut(innerdim.width - x, innerdim.height - y, &self.get_pixel(innerdim.width - y, x));
+                self.set_pixel_mut(innerdim.width - y, x, &cloned);
             }
         }
         self
+    }
+
+    pub fn rotate180(self) -> Canvas {
+        self.rotate90().rotate90()
+    }
+
+    pub fn rotate270(self) -> Canvas {
+        self.rotate180().rotate90()
     }
 
     pub fn vertical_chunks(&self, size_of_chunk: u32) -> Vec<Canvas> {
