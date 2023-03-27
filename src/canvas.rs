@@ -10,6 +10,8 @@ use std::path::Path;
 //
 //TODO!!!! Make use of Point and Box for get_pixel and get_subimage
 //TODO!!!! Create documentation so you can utilize it in this project
+//TODO!!!! Try to look at optimization at some point. Try smart tricks and accessing data directly
+//instead of `get_pixel`
 
 #[derive(Clone, Debug)]
 pub struct Canvas {
@@ -322,19 +324,62 @@ impl Canvas {
         c
     }
 
-    // TODO: What to do when the canvas isn't squared? 
-    // Make it square, transform, grab subimage.
+    pub fn resize(self, x: u32, y: u32) -> Canvas {
+        let mut canvas = Canvas::new(x, y);
+        canvas.set_subimage_mut(0, 0, &self);
+        canvas
+    }
+
+    pub fn resize_mut(&mut self, x: u32, y: u32) {
+        let copy = self.clone();
+        self.width = x;
+        self.height = y;
+        self.pixels = vec![Colors::WHITE; (x * y) as usize];
+        self.set_subimage_mut(0, 0, &copy);
+    }
+
     pub fn rotate90_mut(&mut self) {
+        let prev_dims = self.dimensions();
+        if self.width != self.height {
+            let max_side = max(self.width, self.height);
+            self.resize_mut(max_side, max_side);
+        }
         let dimensions = self.dimensions();
-        let innerdim = Size { width: dimensions.width - 1, height: dimensions.height - 1};
-        for x in 0..dimensions.width/2 {
-            for y in 0..dimensions.height/2 {
+        let innerdim = Size {
+            width: dimensions.width - 1,
+            height: dimensions.height - 1,
+        };
+        for x in 0..dimensions.width / 2 {
+            for y in 0..dimensions.height / 2 {
                 let cloned = self.get_pixel(x, y);
                 self.set_pixel_mut(x, y, &self.get_pixel(y, innerdim.height - x));
-                self.set_pixel_mut(y, innerdim.height - x, &self.get_pixel(innerdim.width - x, innerdim.height - y));
-                self.set_pixel_mut(innerdim.width - x, innerdim.height - y, &self.get_pixel(innerdim.width - y, x));
+                self.set_pixel_mut(
+                    y,
+                    innerdim.height - x,
+                    &self.get_pixel(innerdim.width - x, innerdim.height - y),
+                );
+                self.set_pixel_mut(
+                    innerdim.width - x,
+                    innerdim.height - y,
+                    &self.get_pixel(innerdim.width - y, x),
+                );
                 self.set_pixel_mut(innerdim.width - y, x, &cloned);
             }
+        }
+        if prev_dims.width > prev_dims.height {
+            let canvas = self.get_subimage(
+                self.width - prev_dims.height,
+                0,
+                prev_dims.height,
+                prev_dims.width,
+            );
+            self.resize_mut(prev_dims.height, prev_dims.width);
+            self.set_subimage_mut(0, 0, &canvas);
+        }
+        if prev_dims.height > prev_dims.width {
+            let canvas = self.get_subimage(0, 0, prev_dims.height, prev_dims.width);
+            self.resize_mut(prev_dims.height, prev_dims.width);
+            self.set_subimage_mut(0, 0, &canvas);
         }
     }
 
@@ -349,16 +394,43 @@ impl Canvas {
     }
 
     pub fn rotate90(mut self) -> Canvas {
+        let prev_dims = self.dimensions();
+        if self.width != self.height {
+            let max_side = max(self.width, self.height);
+            self.resize_mut(max_side, max_side);
+        }
         let dimensions = self.dimensions();
-        let innerdim = Size { width: dimensions.width - 1, height: dimensions.height - 1};
-        for x in 0..dimensions.width/2 {
-            for y in 0..dimensions.height/2 {
+        let innerdim = Size {
+            width: dimensions.width - 1,
+            height: dimensions.height - 1,
+        };
+        for x in 0..dimensions.width / 2 {
+            for y in 0..dimensions.height / 2 {
                 let cloned = self.get_pixel(x, y);
                 self.set_pixel_mut(x, y, &self.get_pixel(y, innerdim.height - x));
-                self.set_pixel_mut(y, innerdim.height - x, &self.get_pixel(innerdim.width - x, innerdim.height - y));
-                self.set_pixel_mut(innerdim.width - x, innerdim.height - y, &self.get_pixel(innerdim.width - y, x));
+                self.set_pixel_mut(
+                    y,
+                    innerdim.height - x,
+                    &self.get_pixel(innerdim.width - x, innerdim.height - y),
+                );
+                self.set_pixel_mut(
+                    innerdim.width - x,
+                    innerdim.height - y,
+                    &self.get_pixel(innerdim.width - y, x),
+                );
                 self.set_pixel_mut(innerdim.width - y, x, &cloned);
             }
+        }
+        if prev_dims.width > prev_dims.height {
+            self = self.get_subimage(
+                self.width - prev_dims.height,
+                0,
+                prev_dims.height,
+                prev_dims.width,
+            );
+        }
+        if prev_dims.height > prev_dims.width {
+            self = self.get_subimage(0, 0, prev_dims.height, prev_dims.width);
         }
         self
     }
@@ -372,7 +444,11 @@ impl Canvas {
     }
 
     pub fn vertical_chunks(&self, size_of_chunk: u32) -> Vec<Canvas> {
-        let pixels: Vec<Canvas> = self.pixels.chunks((size_of_chunk * self.width) as usize).map(|x| Canvas::new_with_data(self.width, size_of_chunk, x.to_vec())).collect();
+        let pixels: Vec<Canvas> = self
+            .pixels
+            .chunks((size_of_chunk * self.width) as usize)
+            .map(|x| Canvas::new_with_data(self.width, size_of_chunk, x.to_vec()))
+            .collect();
 
         pixels
     }
@@ -593,9 +669,10 @@ impl Canvas {
         &self,
         predicate: fn(&Pixel, u32, u32) -> bool,
     ) -> Vec<PixelWithCoordinate> {
-
-
-        let result = self.iter_with_coordinates().filter(|x| predicate(&x.pixel, x.coordinate.x, x.coordinate.y)).collect();
+        let result = self
+            .iter_with_coordinates()
+            .filter(|x| predicate(&x.pixel, x.coordinate.x, x.coordinate.y))
+            .collect();
 
         result
 
@@ -729,7 +806,6 @@ mod tests {
         assert_eq!(canvas_one, canvas_two);
     }
 
-
     #[test]
     fn test_find_with_predicate() {
         let position = Point { x: 10, y: 10 };
@@ -748,11 +824,11 @@ mod tests {
         let found = canvas_one.find_with_predicate(predicate);
         // We filled the canvas with 20 * 20 yellow pixels
         assert_eq!(found.len(), 20 * 20);
-        let correct_color = found.iter().all(|pixelwithcoordinate| pixelwithcoordinate.pixel == Pixel::new(255, 255, 0, 255));
+        let correct_color = found
+            .iter()
+            .all(|pixelwithcoordinate| pixelwithcoordinate.pixel == Pixel::new(255, 255, 0, 255));
         assert_eq!(correct_color, true);
-
     }
-
 
     #[test]
     fn clean_canvas_with_background() {
