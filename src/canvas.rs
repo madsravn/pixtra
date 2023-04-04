@@ -8,6 +8,7 @@ use std::path::Path;
 //TODO: Should I use u32 or usize? Rely on image crate?
 //
 //
+//TODO: Chunks and merge functions
 //TODO!!!! Make use of Point and Box for get_pixel and get_subimage
 //TODO!!!! Create documentation so you can utilize it in this project
 //TODO!!!! Try to look at optimization at some point. Try smart tricks and accessing data directly
