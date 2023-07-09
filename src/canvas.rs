@@ -630,6 +630,30 @@ impl Canvas {
             .then(|| &self.pixels[(self.width as i64 * y + x) as usize])
     }
 
+    pub fn fill_by_distance(mut self, x: u32, y: u32, fill_color: &Pixel, distance: f32) -> Canvas {
+        let find_color = self.get_pixel(x, y);
+        if fill_color == &find_color {
+            return self;
+        }
+
+        let mut to_visit = vec![(x as i64, y as i64)];
+        while let Some((x, y)) = to_visit.pop() {
+            self.set_pixel_mut(x as u32, y as u32, fill_color);
+
+            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                match self.try_get_pixel(x + dx, y + dy) {
+                    Some(&ref p) => {
+                        if p.distance(&find_color) < distance {
+                            to_visit.push((x + dx, y + dy));
+                        }
+                    },
+                    _ => {}
+                }
+            }
+        }
+        self
+    }
+
     // By orlp
     pub fn fill(mut self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
         let find_color = self.get_pixel(x, y);

@@ -1,3 +1,6 @@
+Make sure that the examples also runs on the CI. Not only their tests.
+
+
 Something about adding, subtracting pixels should result in a pixelbuilder
 Same for multiplying and dividing constants. Can you do something like (5.0f * Pixel).build() ?
 
