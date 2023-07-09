@@ -13,6 +13,9 @@ use std::path::Path;
 //TODO!!!! Create documentation so you can utilize it in this project
 //TODO!!!! Try to look at optimization at some point. Try smart tricks and accessing data directly
 //instead of `get_pixel`
+//
+//TODO: Split impl up into more files
+//TODO: Make a bin busybox
 
 #[derive(Clone, Debug)]
 pub struct Canvas {
