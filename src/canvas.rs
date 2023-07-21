@@ -448,13 +448,28 @@ impl Canvas {
     }
 
     pub fn vertical_chunks(&self, size_of_chunk: u32) -> Vec<Canvas> {
-        let pixels: Vec<Canvas> = self
+        let chunks: Vec<Canvas> = self
             .pixels
             .chunks((size_of_chunk * self.width) as usize)
             .map(|x| Canvas::new_with_data(self.width, size_of_chunk, x.to_vec()))
             .collect();
 
-        pixels
+        chunks
+    }
+
+    //Ugly version
+    //Clone?
+    pub fn horizontal_chunks(&self, size_of_chunk: u32) -> Vec<Canvas> {
+        let chunks: Vec<Canvas> = self
+            .clone()
+            .rotate90()
+            .pixels
+            .chunks((size_of_chunk * self.width) as usize)
+            .map(|x| Canvas::new_with_data(self.width, size_of_chunk, x.to_vec()))
+            .map(|x| x.rotate270())
+            .collect();
+
+        chunks
     }
 
     fn index_to_coordinate(&self, index: u32) -> (u32, u32) {
@@ -635,6 +650,13 @@ impl Canvas {
 
     pub fn fill_by_distance(mut self, x: u32, y: u32, fill_color: &Pixel, distance: f32) -> Canvas {
         let find_color = self.get_pixel(x, y);
+        self = self.fill_by_color_and_distance(x, y, fill_color, &find_color, distance);
+        self
+    }
+
+    pub fn fill_by_color_and_distance(mut self, x: u32, y: u32, fill_color: &Pixel, color: &Pixel, distance: f32) -> Canvas {
+        let find_color = color.clone();
+        // TODO: This might not work if you hit this exact color by accident?
         if fill_color == &find_color {
             return self;
         }
@@ -656,6 +678,7 @@ impl Canvas {
         }
         self
     }
+
 
     // By orlp
     pub fn fill(mut self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {

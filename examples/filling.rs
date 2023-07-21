@@ -1,5 +1,6 @@
 use pixtra::canvas::Canvas;
 use pixtra::pixels::Pixel;
+use pixtra::utility;
 use std::path::Path;
 
 fn main() {
@@ -17,6 +18,16 @@ fn main() {
         .draw_square(20, 20, 60, 60, &color)
         .fill(1, 1, &Pixel::new(172, 172, 172, 255));
     canvas.save(Path::new("testing.png")).unwrap();
+
+    let canvas = Canvas::load(Path::new("assets/20230709_111142.jpg")).unwrap().rotate90();
+    println!("Size of canvas: {} x {}", canvas.dimensions().width, canvas.dimensions().height);
+    let subcanvas = canvas.get_subimage(1600, 50, 1400, 400);
+    let (center, distance) = utility::find_center_and_size(&subcanvas);
+    println!("center and distance = {center} and {distance}");
+    let canvas = canvas.fill_by_color_and_distance(1600, 50, &Pixel::new(0,0,0,0), &center, 100.0);
+
+    println!("Size of canvas: {} x {}", canvas.dimensions().width, canvas.dimensions().height);
+    canvas.save(Path::new("testing-fill-by-center-and-distance.png")).unwrap();
 }
 
 #[cfg(test)]

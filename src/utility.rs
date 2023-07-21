@@ -65,6 +65,27 @@ pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
     val
 }
 
+// TODO: This is ugly. Can we make it prettier?
+pub fn find_center_and_size(canvas: &Canvas) -> (Pixel, f32) {
+    let max_r = canvas.iter().map(|p| p.r).max().unwrap();
+    let max_g = canvas.iter().map(|p| p.g).max().unwrap();
+    let max_b = canvas.iter().map(|p| p.b).max().unwrap();
+    let max_a = canvas.iter().map(|p| p.a).max().unwrap();
+    let min_r = canvas.iter().map(|p| p.r).min().unwrap();
+    let min_g = canvas.iter().map(|p| p.g).min().unwrap();
+    let min_b = canvas.iter().map(|p| p.b).min().unwrap();
+    let min_a = canvas.iter().map(|p| p.a).min().unwrap();
+    let center_r = (max_r - min_r) / 2 + min_r;
+    let center_g = (max_g - min_g) / 2 + min_g;
+    let center_b = (max_b - min_b) / 2 + min_b;
+    let center_a = (max_a - min_a) / 2 + min_a;
+    let center = Pixel::new(center_r, center_g, center_b, center_a);
+    let corner = Pixel::new(max_r, max_g, max_b, max_a);
+    let distance = center.distance(&corner);
+
+    (center, distance)
+}
+
 pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
     (
         (p1.r - p2.r).pow(2).into(),
