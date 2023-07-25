@@ -65,25 +65,23 @@ pub fn clamp<T: PartialOrd>(min: T, max: T, val: T) -> T {
     val
 }
 
-// TODO: This is ugly. Can we make it prettier?
 pub fn find_center_and_size(canvas: &Canvas) -> (Pixel, f32) {
-    let max_r = canvas.iter().map(|p| p.r).max().unwrap();
-    let max_g = canvas.iter().map(|p| p.g).max().unwrap();
-    let max_b = canvas.iter().map(|p| p.b).max().unwrap();
-    let max_a = canvas.iter().map(|p| p.a).max().unwrap();
-    let min_r = canvas.iter().map(|p| p.r).min().unwrap();
-    let min_g = canvas.iter().map(|p| p.g).min().unwrap();
-    let min_b = canvas.iter().map(|p| p.b).min().unwrap();
-    let min_a = canvas.iter().map(|p| p.a).min().unwrap();
-    let center_r = (max_r - min_r) / 2 + min_r;
-    let center_g = (max_g - min_g) / 2 + min_g;
-    let center_b = (max_b - min_b) / 2 + min_b;
-    let center_a = (max_a - min_a) / 2 + min_a;
+    let (center_r, max_r) = center(&canvas, |p| p.r);
+    let (center_g, max_g) = center(&canvas, |p| p.g);
+    let (center_b, max_b) = center(&canvas, |p| p.b);
+    let (center_a, max_a) = center(&canvas, |p| p.a);
     let center = Pixel::new(center_r, center_g, center_b, center_a);
     let corner = Pixel::new(max_r, max_g, max_b, max_a);
     let distance = center.distance(&corner);
 
     (center, distance)
+}
+
+fn center<F>(canvas: &Canvas, map_color: F) -> (u8, u8) 
+where F: Fn(Pixel) -> u8{
+    let min = canvas.iter().map(|p| map_color(p)).min().unwrap();
+    let max = canvas.iter().map(|p| map_color(p)).max().unwrap();
+    ((max - min) / 2 + min, max)
 }
 
 pub fn diff_squared(p1: &Pixel, p2: &Pixel) -> (u32, u32, u32, u32) {
@@ -191,4 +189,30 @@ pub fn overlap_colors(destination: &Pixel, source: &Pixel) -> Pixel {
     );
 
     Pixel::denormalize(new_r, new_g, new_b, new_a)
+}
+
+pub fn merge_chunks_vertically(chunks: &Vec<Canvas>) -> Canvas {
+    let width = chunks.iter().map(|x| x.dimensions().width).max().unwrap_or_default(); 
+    let height = chunks.iter().map(|x| x.dimensions().height).sum();
+    let mut vec = vec![0];
+    chunks.iter().map(|x| x.dimensions().height).fold(0, |acc, x| { vec.push(acc + x); acc + x });
+
+    let mut canvas = Canvas::new(width, height);
+    for (i, e) in chunks.iter().enumerate() {
+        canvas.set_subimage_mut(0, vec[i], e);
+    }
+    canvas
+}
+
+pub fn merge_chunks_horizontally(chunks: &Vec<Canvas>) -> Canvas {
+    let height = chunks.iter().map(|x| x.dimensions().height).max().unwrap_or_default(); 
+    let width = chunks.iter().map(|x| x.dimensions().width).sum();
+    let mut vec = vec![0];
+    chunks.iter().map(|x| x.dimensions().width).fold(0, |acc, x| { vec.push(acc + x); acc + x });
+
+    let mut canvas = Canvas::new(width, height);
+    for (i, e) in chunks.iter().enumerate() {
+        canvas.set_subimage_mut(vec[i], 0,  e);
+    }
+    canvas
 }
