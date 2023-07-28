@@ -21,13 +21,21 @@ fn main() {
 
     let canvas = Canvas::load(Path::new("assets/20230709_111142.jpg")).unwrap().rotate90();
     println!("Size of canvas: {} x {}", canvas.dimensions().width, canvas.dimensions().height);
-    let subcanvas = canvas.get_subimage(1600, 50, 1400, 400);
+    /*let subcanvas = canvas.get_subimage(1600, 50, 1400, 400);
     let (center, distance) = utility::find_center_and_size(&subcanvas);
     println!("center and distance = {center} and {distance}");
     let canvas = canvas.fill_by_color_and_distance(1600, 50, &Pixel::new(0,0,0,0), &center, 100.0);
 
     println!("Size of canvas: {} x {}", canvas.dimensions().width, canvas.dimensions().height);
-    canvas.save(Path::new("testing-fill-by-center-and-distance.png")).unwrap();
+    canvas.save(Path::new("testing-fill-by-center-and-distance.png")).unwrap();*/
+
+    /*for i in (30..90).step_by(1) {
+        let current_canvas = canvas.clone();
+        let name = format!("output_liv/distance_{i}.png");
+        let current = current_canvas.fill_by_distance(1500, 20, &Pixel::new(0,0,0,0), i as f32);
+        current.save(Path::new(&name)).unwrap();
+        println!("Number {i} done");
+    }*/
 }
 
 #[cfg(test)]
