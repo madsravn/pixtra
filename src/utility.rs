@@ -102,6 +102,14 @@ pub fn count_colors(c: &Canvas) -> HashMap<Pixel, usize> {
     map
 }
 
+pub fn counted_colors_to_html(map: &HashMap<Pixel, usize>) -> String {
+    let mut pairs: Vec<(Pixel, usize)> = map.iter().map(|(x, y)| (x.clone(), y.clone())).collect();
+    pairs.sort_by_key(|x| x.1);
+    pairs.reverse();
+    let output: String = pairs.iter().map(|x| format!("<tr> <td> {} </td> <td bgcolor=\"RGB({}, {}, {})\"> ({}, {}, {}) </td> </tr>", x.1, x.0.r, x.0.g, x.0.b, x.0.r, x.0.g, x.0.b).to_string()).collect();
+    output
+}
+
 pub fn diff(c1: &Canvas, c2: &Canvas) -> Canvas {
     let c = Canvas::new(1, 1);
     c

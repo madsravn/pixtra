@@ -1,5 +1,6 @@
 use image::io::Reader;
 use pixtra::canvas::Canvas;
+use pixtra::utility::{count_colors, counted_colors_to_html};
 use std::path::Path;
 
 // TODO: Turn images grey
@@ -13,7 +14,10 @@ use std::path::Path;
 // Inverse colors
 
 fn main() {
-    let canvas = Canvas::new(4, 5);
+    let canvas = Canvas::load(&Path::new("testing.png")).unwrap();
+    let colors = count_colors(&canvas);
+    let output = counted_colors_to_html(&colors);
+    println!("{}", output);
     canvas.save(Path::new("here.png")).expect("To be saved");
     println!("Test");
 }
