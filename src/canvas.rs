@@ -48,6 +48,11 @@ pub struct Rect {
     pub size: Size,
 }
 
+#[derive(Clone, Debug)]
+pub struct Island {
+    pub points: Vec<Point>
+}
+
 #[derive(Debug)]
 pub enum ImageError {
     Decoding(String),
@@ -637,6 +642,14 @@ impl Canvas {
         self
     }
 
+
+    //TODO: Find islands:
+    //Clone
+    //Color all actual colors a certain color.
+    //Pick a random pixel of that color
+    //fill_with_island - save island. 
+    //Repeat until no pixels of that color exists.
+
     // By orlp
     fn in_bounds(&self, x: i64, y: i64) -> bool {
         x >= 0 && x < self.width.into() && y >= 0 && y < self.height.into()
@@ -679,17 +692,17 @@ impl Canvas {
         self
     }
 
-
-    // By orlp
-    pub fn fill(mut self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
+    pub fn fill_with_island(mut self, x: u32, y: u32, fill_color: &Pixel) -> (Canvas, Option<Island>) {
+        let mut points = vec![Point {x, y}];
         let find_color = self.get_pixel(x, y);
         if fill_color == &find_color {
-            return self;
+            return (self, None);
         }
 
         let mut to_visit = vec![(x as i64, y as i64)];
         while let Some((x, y)) = to_visit.pop() {
             self.set_pixel_mut(x as u32, y as u32, fill_color);
+            points.push(Point { x: x as u32, y: y as u32});
 
             for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
                 if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
@@ -697,8 +710,14 @@ impl Canvas {
                 }
             }
         }
+        let island = Some(Island {points}); 
+        (self, island)
+    }
 
-        self
+
+    // By orlp
+    pub fn fill(self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
+        self.fill_with_island(x, y, fill_color).0
     }
 
     /// Applies filter to entire canvas. `filter` is a function that takes a reference to the

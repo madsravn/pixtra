@@ -1,9 +1,10 @@
 use pixtra::canvas::Canvas;
 use pixtra::pixels::{Pixel, PixelBuilder};
+use pixtra::utility::{to_grey_lumiosity, count_colors, counted_colors_to_html};
 use std::path::Path;
 
 fn gaussian_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
-    // NOTE: The kernel (this vector) needs to sum to 1.0. Below 1.0 your image will appear darker
+    // NOTE: The kernel needs to sum to 1.0. Below 1.0 your image will appear darker
     // and above 1.0 it will appear lighter.
     let kernel = vec![0.06, 0.13, 0.06, 0.13, 0.24, 0.13, 0.06, 0.13, 0.06];
     let coords = vec![
@@ -25,6 +26,41 @@ fn gaussian_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
     }
     canvas.get_pixel(x, y)
 }
+
+fn lap_of_gaussian_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
+    // NOTE: The kernel needs to sum to 1.0. Below 1.0 your image will appear darker
+    // and above 1.0 it will appear lighter.
+    let kernel = vec![
+        0, 1, 1, 2, 2, 2, 1, 1, 0,
+        1, 2, 4, 5, 5, 5, 4, 2, 1,
+        1, 4, 5, 3, 0, 3, 5, 4, 1,
+        2, 5, 3, -12, -24, -12, 3, 5, 2,
+        2, 5, 0, -24, -40, -24, 0, 5, 2,
+        2, 5, 3, -12, -24, -12, 3, 5, 2,
+        1, 4, 5, 3, 0, 3, 5, 4, 1,
+        1, 2, 4, 5, 5, 5, 4, 2, 1,
+        0, 1, 1, 2, 2, 2, 1, 1, 0];
+    let kernel = kernel.iter().map(|&x| x as f32).collect();
+    let mut coords = vec![];
+    for y in -4..5 {
+        for x in -4..5 {
+            coords.push((x, y));
+        }
+    }
+    // For simplicity, we will leave out the edges of the picture.
+    let canvas_size = canvas.dimensions();
+    if x > 3 && y > 3 && x < canvas_size.width - 4 && y < canvas_size.height - 4 {
+        let pixel = apply_filter(canvas, (x, y), &kernel, &coords);
+        return pixel;
+    }
+    canvas.get_pixel(x, y)
+}
+
+fn grey_scale_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
+    to_grey_lumiosity(&canvas.get_pixel(x, y))
+}
+
+
 
 fn apply_filter(
     canvas: &Canvas,
@@ -125,6 +161,7 @@ fn inverse_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
 fn main() {
     // Gaussian blur
     let canvas = Canvas::load(Path::new("assets/lena.png")).unwrap();
+    let test_image = Canvas::load(Path::new("assets/IMG_0771.JPG")).unwrap();
     let gaussian_canvas = canvas.filter(gaussian_filter);
     let _ = gaussian_canvas
         .save(Path::new("gaussian_canvas.png"))
@@ -152,4 +189,14 @@ fn main() {
     let _ = prewitt_edge_detection_canvas
         .save(Path::new("prewitt_edge_detection_filter.png"))
         .unwrap();
+
+    let lap_of_gaussian_filter_canvas = test_image.filter(grey_scale_filter).filter(lap_of_gaussian_filter);
+    let counted_colors = count_colors(&lap_of_gaussian_filter_canvas);
+    println!("{}", counted_colors_to_html(&counted_colors));
+    let _ = lap_of_gaussian_filter_canvas
+        .save(Path::new("lap_of_gaussian_edge_detection_filter.png"))
+        .unwrap();
+
+
+
 }
