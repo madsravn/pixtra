@@ -24,7 +24,7 @@ pub struct Canvas {
     width: u32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
@@ -477,8 +477,9 @@ impl Canvas {
         chunks
     }
 
-    fn index_to_coordinate(&self, index: u32) -> (u32, u32) {
-        (index % self.width, index / self.width)
+    fn index_to_coordinate(&self, index: u32) -> Point {
+        let (x, y) = (index % self.width, index / self.width);
+        Point {x, y}
     }
 
     pub fn iter(&self) -> impl Iterator<Item = Pixel> + '_ {
@@ -491,11 +492,8 @@ impl Canvas {
         self.pixels
             .iter()
             .zip(range)
-            .map(|(pixel, coordinate)| PixelWithCoordinate {
-                coordinate: Point {
-                    x: coordinate.0,
-                    y: coordinate.1,
-                },
+            .map(|(pixel, point)| PixelWithCoordinate {
+                coordinate: point,
                 pixel: pixel.clone(),
             })
     }
@@ -642,13 +640,19 @@ impl Canvas {
         self
     }
 
+    // TODO: When using for feature extraction, remember to filter to black and white only
+    pub fn find_islands(self, island_color: &Pixel) -> Vec<Island> {
+        let mut canvas = self.clone();
+        let points = canvas.find_colors(island_color);
+        let islands: Vec<Island> = points.iter().map(|x| canvas.fill_with_island_mut(x.x, x.y, &Colors::BLACK)).flatten().collect();
 
-    //TODO: Find islands:
-    //Clone
-    //Color all actual colors a certain color.
-    //Pick a random pixel of that color
-    //fill_with_island - save island. 
-    //Repeat until no pixels of that color exists.
+        islands
+    }
+
+    fn find_colors(&self, color: &Pixel) -> Vec<Point> {
+        let points: Vec<Point> = self.pixels.iter().enumerate().filter(|(_, p)| p == &color).map(|(i, _)| self.index_to_coordinate(i as u32)).collect();
+        points
+    }
 
     // By orlp
     fn in_bounds(&self, x: i64, y: i64) -> bool {
@@ -692,6 +696,7 @@ impl Canvas {
         self
     }
 
+    //TODO: Is this still needed? 
     pub fn fill_with_island(mut self, x: u32, y: u32, fill_color: &Pixel) -> (Canvas, Option<Island>) {
         let mut points = vec![Point {x, y}];
         let find_color = self.get_pixel(x, y);
@@ -713,6 +718,29 @@ impl Canvas {
         let island = Some(Island {points}); 
         (self, island)
     }
+
+    pub fn fill_with_island_mut(&mut self, x: u32, y: u32, fill_color: &Pixel) -> Option<Island> {
+        let mut points = vec![Point {x, y}];
+        let find_color = self.get_pixel(x, y);
+        if fill_color == &find_color {
+            return None;
+        }
+
+        let mut to_visit = vec![(x as i64, y as i64)];
+        while let Some((x, y)) = to_visit.pop() {
+            self.set_pixel_mut(x as u32, y as u32, fill_color);
+            points.push(Point { x: x as u32, y: y as u32});
+
+            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
+                    to_visit.push((x + dx, y + dy));
+                }
+            }
+        }
+        let island = Some(Island {points}); 
+        island
+    }
+
 
 
     // By orlp
