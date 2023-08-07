@@ -24,7 +24,7 @@ pub struct Canvas {
     width: u32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Hash, Debug)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
@@ -70,6 +70,21 @@ impl PartialEq for Size {
 }
 
 impl Eq for Size {}
+
+impl PartialEq for Point {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+impl Eq for Point {}
+
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+
 
 impl PartialEq for Canvas {
     fn eq(&self, other: &Self) -> bool {
@@ -641,7 +656,7 @@ impl Canvas {
     }
 
     // TODO: When using for feature extraction, remember to filter to black and white only
-    pub fn find_islands(self, island_color: &Pixel) -> Vec<Island> {
+    pub fn find_islands(&self, island_color: &Pixel) -> Vec<Island> {
         let mut canvas = self.clone();
         let points = canvas.find_colors(island_color);
         let islands: Vec<Island> = points.iter().map(|x| canvas.fill_with_island_mut(x.x, x.y, &Colors::BLACK)).flatten().collect();
