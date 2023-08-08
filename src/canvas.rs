@@ -84,8 +84,6 @@ impl fmt::Display for Point {
     }
 }
 
-
-
 impl PartialEq for Canvas {
     fn eq(&self, other: &Self) -> bool {
         if self.width == other.width && self.height == other.height {
@@ -659,7 +657,7 @@ impl Canvas {
     pub fn find_islands(&self, island_color: &Pixel) -> Vec<Island> {
         let mut canvas = self.clone();
         let points = canvas.find_colors(island_color);
-        let islands: Vec<Island> = points.iter().map(|x| canvas.fill_with_island_mut(x.x, x.y, &Colors::BLACK)).flatten().collect();
+        let islands: Vec<Island> = points.iter().map(|x| canvas.find_islands_with_fill(x.x, x.y, &Colors::BLACK)).flatten().collect();
 
         islands
     }
@@ -711,7 +709,7 @@ impl Canvas {
         self
     }
 
-    pub fn fill_with_island_mut(&mut self, x: u32, y: u32, fill_color: &Pixel) -> Option<Island> {
+    fn find_islands_with_fill(&mut self, x: u32, y: u32, fill_color: &Pixel) -> Option<Island> {
         let mut points = vec![];
         let find_color = self.get_pixel(x, y);
         if fill_color == &find_color {
