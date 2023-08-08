@@ -711,31 +711,8 @@ impl Canvas {
         self
     }
 
-    //TODO: Is this still needed? 
-    pub fn fill_with_island(mut self, x: u32, y: u32, fill_color: &Pixel) -> (Canvas, Option<Island>) {
-        let mut points = vec![Point {x, y}];
-        let find_color = self.get_pixel(x, y);
-        if fill_color == &find_color {
-            return (self, None);
-        }
-
-        let mut to_visit = vec![(x as i64, y as i64)];
-        while let Some((x, y)) = to_visit.pop() {
-            self.set_pixel_mut(x as u32, y as u32, fill_color);
-            points.push(Point { x: x as u32, y: y as u32});
-
-            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
-                if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
-                    to_visit.push((x + dx, y + dy));
-                }
-            }
-        }
-        let island = Some(Island {points}); 
-        (self, island)
-    }
-
     pub fn fill_with_island_mut(&mut self, x: u32, y: u32, fill_color: &Pixel) -> Option<Island> {
-        let mut points = vec![Point {x, y}];
+        let mut points = vec![];
         let find_color = self.get_pixel(x, y);
         if fill_color == &find_color {
             return None;
@@ -743,12 +720,14 @@ impl Canvas {
 
         let mut to_visit = vec![(x as i64, y as i64)];
         while let Some((x, y)) = to_visit.pop() {
-            self.set_pixel_mut(x as u32, y as u32, fill_color);
-            points.push(Point { x: x as u32, y: y as u32});
-
-            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
-                if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
-                    to_visit.push((x + dx, y + dy));
+            let point = Point {x: x as u32, y: y as u32};
+            if !points.contains(&point) {
+                self.set_pixel_mut(x as u32, y as u32, fill_color);
+                points.push(Point { x: x as u32, y: y as u32});
+                for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                    if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
+                        to_visit.push((x + dx, y + dy));
+                    }
                 }
             }
         }
@@ -759,8 +738,24 @@ impl Canvas {
 
 
     // By orlp
-    pub fn fill(self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
-        self.fill_with_island(x, y, fill_color).0
+    pub fn fill(mut self, x: u32, y: u32, fill_color: &Pixel) -> Canvas {
+        let find_color = self.get_pixel(x, y);
+        if fill_color == &find_color {
+            return self;
+        }
+
+        let mut to_visit = vec![(x as i64, y as i64)];
+        while let Some((x, y)) = to_visit.pop() {
+            self.set_pixel_mut(x as u32, y as u32, fill_color);
+
+            for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                if self.try_get_pixel(x + dx, y + dy) == Some(&find_color) {
+                    to_visit.push((x + dx, y + dy));
+                }
+            }
+        }
+        self
+
     }
 
     /// Applies filter to entire canvas. `filter` is a function that takes a reference to the

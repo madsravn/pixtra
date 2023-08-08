@@ -5,7 +5,7 @@ use pixtra::utility::count_colors;
 use std::path::Path;
 
 fn main() {
-    let canvas = Canvas::load(Path::new("assets/green_islands.png")).unwrap();
+    let canvas = Canvas::load(Path::new("assets/small_green_islands.png")).unwrap();
     let count = count_colors(&canvas);
     for (key, value) in count.iter() {
         println!("{}: {}", key, value);
