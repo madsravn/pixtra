@@ -1,4 +1,4 @@
-use pixtra::canvas::Canvas;
+use pixtra::canvas::{Canvas, Island};
 use pixtra::pixels::{Pixel, PixelBuilder};
 use pixtra::utility::{to_grey_lumiosity, count_colors, counted_colors_to_html};
 use std::path::Path;
@@ -58,6 +58,15 @@ fn lap_of_gaussian_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
 
 fn grey_scale_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
     to_grey_lumiosity(&canvas.get_pixel(x, y))
+}
+
+fn black_or_white_filter(canvas: &Canvas, x: u32, y: u32) -> Pixel {
+    let pixel = canvas.get_pixel(x, y);
+    if pixel.r < 128 {
+        Pixel::new(0, 0, 0, 255)
+    } else {
+        Pixel::new(255, 255, 255, 255)
+    }
 }
 
 
@@ -191,11 +200,29 @@ fn main() {
         .unwrap();
 
     let lap_of_gaussian_filter_canvas = test_image.filter(grey_scale_filter).filter(lap_of_gaussian_filter);
-    let counted_colors = count_colors(&lap_of_gaussian_filter_canvas);
-    println!("{}", counted_colors_to_html(&counted_colors));
+    //let counted_colors = count_colors(&lap_of_gaussian_filter_canvas);
+    //println!("{}", counted_colors_to_html(&counted_colors));
     let _ = lap_of_gaussian_filter_canvas
         .save(Path::new("lap_of_gaussian_edge_detection_filter.png"))
         .unwrap();
+    let filtered_canvas = lap_of_gaussian_filter_canvas.filter(black_or_white_filter);
+    let _ = filtered_canvas
+        .save(Path::new("filtered_canvas.png"))
+        .unwrap();
+
+    let islands = filtered_canvas.find_islands(&Pixel::new(255, 255, 255, 255));
+    let islands_with_size: Vec<Island> = islands.iter().filter(|x| x.points.len() > 40000).map(|x| x.clone()).collect();
+    // TODO: Now we have the outline of the islands. 
+    // Copy the islands a blank canvas.
+    // Fill from the outside
+    // Now you have the entire form of all the islands
+    // Transfer the pixels that were not filled from the outside
+    //
+    //
+    // TODO: NEW IDEA AS WELL: Create a 'fattener'. Paints a 2x2, 3x3, 4x4, ... etc around each
+    // pixel. This way you can expand outwards
+
+
 
 
 
