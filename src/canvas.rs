@@ -568,6 +568,59 @@ impl Canvas {
         }
     }
 
+    // TODO: Four parameters? Ugly
+    pub fn trace(mut self, island: &Island, left: u32, right: u32, up: u32, down: u32) -> Canvas {
+        let left: i64 = left.into();
+        let right: i64 = right.into();
+        let up: i64 = up.into();
+        let down: i64 = down.into();
+        let color = self.get_pixel(island.points[0].x, island.points[0].y);
+
+        for point in island.points.iter() {
+
+            for x in -left..=right {
+                for y in -up..=down {
+                    self.set_pixel_mut_signed(point.x as i64 + x, point.y as i64 + y, &color);
+                }
+            }
+        }
+
+        self
+    }
+
+    pub fn trace_mut(&mut self, island: &Island, left: u32, right: u32, up: u32, down: u32) {
+        let left: i64 = left.into();
+        let right: i64 = right.into();
+        let up: i64 = up.into();
+        let down: i64 = down.into();
+        let color = self.get_pixel(island.points[0].x, island.points[0].y);
+
+        for point in island.points.iter() {
+
+            for x in -left..=right {
+                for y in -up..=down {
+                    self.set_pixel_mut_signed(point.x as i64 + x, point.y as i64 + y, &color);
+                }
+            }
+        }
+
+    }
+
+    pub fn draw_island(mut self, island: &Island, color: &Pixel) -> Canvas {
+        for point in island.points.iter() {
+            self.set_pixel_mut(point.x, point.y, color);
+        }
+
+        self
+    }
+
+    pub fn draw_island_mut(&mut self, island: &Island, color: &Pixel) {
+        for point in island.points.iter() {
+            self.set_pixel_mut(point.x, point.y, color);
+        }
+
+    }
+
     /// Draws canvas `canvas` as a subimage at `(x, y)`
     pub fn draw_subimage(mut self, x: u32, y: u32, canvas: &Canvas) -> Canvas {
         let binding = self.clone();
@@ -612,13 +665,23 @@ impl Canvas {
 
     /// Sets pixel at position `(x, y)` to `pixel`
     pub fn set_pixel(mut self, x: u32, y: u32, pixel: &Pixel) -> Canvas {
+        // TODO: We need to make sure that (x, y) is within the border
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
         self
     }
 
     /// Mutable sets pixel at position `(x, y)` to `pixel`
     pub fn set_pixel_mut(&mut self, x: u32, y: u32, pixel: &Pixel) {
+        // TODO: We need to make sure that (x, y) is within the border
         self.pixels[(self.width * y + x) as usize] = pixel.clone();
+    }
+
+    /// Mutable sets pixel at position `(x, y)` to `pixel` if `x: i64` and `y: i64` is within image
+    /// bounds
+    pub fn set_pixel_mut_signed(&mut self, x: i64, y: i64, pixel: &Pixel) {
+        if self.in_bounds(x, y) {
+            self.set_pixel_mut(x as u32, y as u32, pixel);
+        }
     }
 
     /// Turns the entire canvas grayscale.
