@@ -569,12 +569,11 @@ impl Canvas {
     }
 
     // TODO: Four parameters? Ugly
-    pub fn trace(mut self, island: &Island, left: u32, right: u32, up: u32, down: u32) -> Canvas {
+    pub fn trace(mut self, island: &Island, color: &Pixel, left: u32, right: u32, up: u32, down: u32) -> Canvas {
         let left: i64 = left.into();
         let right: i64 = right.into();
         let up: i64 = up.into();
         let down: i64 = down.into();
-        let color = self.get_pixel(island.points[0].x, island.points[0].y);
 
         for point in island.points.iter() {
 
@@ -588,12 +587,11 @@ impl Canvas {
         self
     }
 
-    pub fn trace_mut(&mut self, island: &Island, left: u32, right: u32, up: u32, down: u32) {
+    pub fn trace_mut(&mut self, island: &Island, color: &Pixel, left: u32, right: u32, up: u32, down: u32) {
         let left: i64 = left.into();
         let right: i64 = right.into();
         let up: i64 = up.into();
         let down: i64 = down.into();
-        let color = self.get_pixel(island.points[0].x, island.points[0].y);
 
         for point in island.points.iter() {
 
