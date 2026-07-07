@@ -37,3 +37,5 @@ rotate270_in	Affine transformations Rotate an image 270 degrees clockwise and pu
 thumbnail	Image sampling Resize the supplied image to the specific dimensions.
 
 Implement certain filters as part of a standard filters toolbox. Edge detection, gaussian blur, etc
+
+https://www.andersriggelsen.dk/glblendfunc.php
