@@ -516,7 +516,7 @@ impl Canvas {
         x: u32,
         y: u32,
         canvas: &'b Canvas,
-    ) -> impl Iterator<Item = PixelWithCoordinate> + '_
+    ) -> impl Iterator<Item = PixelWithCoordinate> + 'a
     where
         'b: 'a,
     {

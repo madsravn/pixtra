@@ -110,7 +110,7 @@ pub fn counted_colors_to_html(map: &HashMap<Pixel, usize>) -> String {
     output
 }
 
-pub fn diff(c1: &Canvas, c2: &Canvas) -> Canvas {
+pub fn diff(_c1: &Canvas, _c2: &Canvas) -> Canvas {
     let c = Canvas::new(1, 1);
     c
 }

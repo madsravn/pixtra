@@ -141,7 +141,7 @@ impl Sub for PixelBuilder {
     type Output = PixelBuilder;
 
     fn sub(self, other: PixelBuilder) -> PixelBuilder {
-        self + -1.0f * other
+        self + (other * -1.0 as f32)
     }
 }
 
@@ -162,7 +162,7 @@ impl Sub<Pixel> for PixelBuilder {
     type Output = PixelBuilder;
 
     fn sub(self, other: Pixel) -> PixelBuilder {
-        self + -1.0f * other
+        self + (other * -1.0 as f32)
     }
 }
 
@@ -184,12 +184,25 @@ impl Sub for Pixel {
     type Output = PixelBuilder;
 
     fn sub(self, other: Pixel) -> PixelBuilder {
-        self + -1.0f * other
+        self + (other * -1.0 as f32)
     }
 }
 
 //TODO: This needs to be for all floats. And then PixelBuilder needs to support that.
 impl Mul<f32> for Pixel {
+    type Output = PixelBuilder;
+
+    fn mul(self, other: f32) -> PixelBuilder {
+        PixelBuilder {
+            r: self.r as f32 * other,
+            g: self.g as f32 * other,
+            b: self.b as f32 * other,
+            a: self.a as f32 * other,
+        }
+    }
+}
+
+impl Mul<f32> for PixelBuilder {
     type Output = PixelBuilder;
 
     fn mul(self, other: f32) -> PixelBuilder {
