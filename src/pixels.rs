@@ -137,6 +137,14 @@ impl Add for PixelBuilder {
     }
 }
 
+impl Sub for PixelBuilder {
+    type Output = PixelBuilder;
+
+    fn sub(self, other: PixelBuilder) -> PixelBuilder {
+        self + -1.0f * other
+    }
+}
+
 impl Add<Pixel> for PixelBuilder {
     type Output = PixelBuilder;
 
@@ -147,6 +155,14 @@ impl Add<Pixel> for PixelBuilder {
             b: self.b + other.b as f32,
             a: self.a + other.a as f32,
         }
+    }
+}
+
+impl Sub<Pixel> for PixelBuilder {
+    type Output = PixelBuilder;
+
+    fn sub(self, other: Pixel) -> PixelBuilder {
+        self + -1.0f * other
     }
 }
 
@@ -161,6 +177,14 @@ impl Add for Pixel {
             b: self.b as f32 + other.b as f32,
             a: self.a as f32 + other.a as f32,
         }
+    }
+}
+
+impl Sub for Pixel {
+    type Output = PixelBuilder;
+
+    fn sub(self, other: Pixel) -> PixelBuilder {
+        self + -1.0f * other
     }
 }
 
@@ -346,6 +370,13 @@ mod tests {
         assert_eq!(test_one.build(), Pixel::new(5, 10, 15, 20));
         let test_two = pixel.clone() + pixel_builder.clone();
         assert_eq!(test_two.build(), Pixel::new(3, 6, 9, 12));
+    }
+
+    #[test]
+    fn test_sub() {
+        let pixel = Pixel::new(1, 2, 3, 4);
+        let pixel_builder = pixel.clone() - pixel.clone();
+        assert_eq!(pixel_builder.clone().build(), Pixel::new(0, 0, 0, 0));
     }
 
     #[test]
