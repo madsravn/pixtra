@@ -1,5 +1,5 @@
 use crate::utility::clamp;
-use rand::distributions::{Distribution, Uniform};
+use rand::distr::{Distribution, Uniform};
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -237,14 +237,18 @@ impl Pixel {
     }
 
     pub fn random() -> Pixel {
-        let mut rng = rand::thread_rng();
-        let random = Uniform::from(0..=255);
-        Pixel::new(
-            random.sample(&mut rng).into(),
-            random.sample(&mut rng).into(),
-            random.sample(&mut rng).into(),
-            255,
-        )
+        let mut rng = rand::rng();
+        let uniform = Uniform::try_from(0..=255);
+        match uniform {
+            Ok(random) => 
+                Pixel::new(
+                    random.sample(&mut rng).into(),
+                    random.sample(&mut rng).into(),
+                    random.sample(&mut rng).into(),
+                    255,
+                ),
+            Err(_) => Pixel::new(0,0,0,255,),
+        }
     }
 
     pub fn is_zero(&self) -> bool {

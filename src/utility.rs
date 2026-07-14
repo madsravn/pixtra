@@ -224,4 +224,3 @@ pub fn merge_chunks_horizontally(chunks: &Vec<Canvas>) -> Canvas {
     }
     canvas
 }
-
